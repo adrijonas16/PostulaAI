@@ -187,4 +187,94 @@ public sealed class JobPostingEndpointsTests(DatabaseApiFactory factory)
         Assert.Contains(AuditActions.JobPostingCreated, actions);
         Assert.Contains(AuditActions.JobPostingDeleted, actions);
     }
+
+    [Fact]
+    public async Task NewPosting_StartsAsSaved()
+    {
+        using var client = factory.CreateApiClient();
+        var session = await RegisterAsync(client);
+
+        var posting = await CreateAsync(client, session, Sample());
+
+        Assert.Equal(ApplicationStatus.Saved, posting.Application.Status);
+        Assert.Null(posting.Application.AppliedOn);
+    }
+
+    [Fact]
+    public async Task UpdateApplication_StoresWhatWasSent_IsAudited_AndFiltersTheList()
+    {
+        using var client = factory.CreateApiClient();
+        var session = await RegisterAsync(client);
+        var applied = await CreateAsync(client, session, Sample("Aplicada"));
+        await CreateAsync(client, session, Sample("Solo guardada"));
+        var request = new ApplicationRequest(
+            ApplicationStatus.Interview, new DateOnly(2026, 10, 30), "  Entrevista el lunes  ", "Resumen que envié.", "Carta que envié.");
+
+        using var put = await client.SendAsync(
+            WithBearer(HttpMethod.Put, $"{BasePath}/{applied.Id}/application", session.Auth.AccessToken, request));
+        var updated = await put.Content.ReadFromJsonAsync<JobPostingResponse>(Json);
+
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+        Assert.NotNull(updated);
+        Assert.Equal(ApplicationStatus.Interview, updated.Application.Status);
+        Assert.Equal(new DateOnly(2026, 10, 30), updated.Application.AppliedOn);
+        Assert.Equal("Entrevista el lunes", updated.Application.Notes);
+        Assert.Equal("Carta que envié.", updated.Application.SubmittedCoverLetter);
+        Assert.NotNull(updated.Application.UpdatedAt);
+
+        var interviews = await ListAsync(client, session, "?status=interview");
+        var saved = await ListAsync(client, session, "?status=saved");
+        Assert.Equal(new[] { "Aplicada" }, interviews.Items.Select(item => item.Title));
+        Assert.Equal(new DateOnly(2026, 10, 30), interviews.Items[0].AppliedOn);
+        Assert.Equal(new[] { "Solo guardada" }, saved.Items.Select(item => item.Title));
+
+        var auditCount = await factory.WithDbAsync(db => db.AuditLogs.AsNoTracking()
+            .CountAsync(log => log.EntityId == applied.Id && log.Action == AuditActions.JobPostingApplicationUpdated));
+        Assert.Equal(1, auditCount);
+    }
+
+    [Fact]
+    public async Task UpdateApplication_RequiresADate_WhenTheUserApplied()
+    {
+        using var client = factory.CreateApiClient();
+        var session = await RegisterAsync(client);
+        var posting = await CreateAsync(client, session, Sample());
+
+        using var put = await client.SendAsync(WithBearer(
+            HttpMethod.Put,
+            $"{BasePath}/{posting.Id}/application",
+            session.Auth.AccessToken,
+            new ApplicationRequest(ApplicationStatus.Applied, null, null, null, null)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+        Assert.Contains("appliedOn", await put.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UpdateApplication_OnAnotherUsersPosting_Returns404AndChangesNothing()
+    {
+        using var client = factory.CreateApiClient();
+        var owner = await RegisterAsync(client);
+        var intruder = await RegisterAsync(client);
+        var posting = await CreateAsync(client, owner, Sample());
+
+        using var put = await client.SendAsync(WithBearer(
+            HttpMethod.Put,
+            $"{BasePath}/{posting.Id}/application",
+            intruder.Auth.AccessToken,
+            new ApplicationRequest(ApplicationStatus.Rejected, new DateOnly(2026, 10, 1), null, null, null)));
+
+        Assert.Equal(HttpStatusCode.NotFound, put.StatusCode);
+        using var ownerGet = await client.SendAsync(WithBearer(HttpMethod.Get, $"{BasePath}/{posting.Id}", owner.Auth.AccessToken));
+        var unchanged = await ownerGet.Content.ReadFromJsonAsync<JobPostingResponse>(Json);
+        Assert.Equal(ApplicationStatus.Saved, unchanged?.Application.Status);
+    }
+
+    [Fact]
+    public async Task Model_HasNoChangesMissingFromMigrations()
+    {
+        var pending = await factory.WithDbAsync(db => Task.FromResult(db.Database.HasPendingModelChanges()));
+
+        Assert.False(pending, "Run `dotnet ef migrations add` for the model changes.");
+    }
 }

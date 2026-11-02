@@ -12,6 +12,8 @@ import { analysisErrorMessage, bandLabels } from './analysisLabels'
 import { CopyButton } from './CopyButton'
 import { EditableDraft } from './EditableDraft'
 import { MatchBar, MatchLegend } from './MatchBar'
+import { ApplicationPanel } from '../jobs/ApplicationPanel'
+import { getJobPosting, jobPostingKeys } from '../jobs/jobsApi'
 import { RequirementMap } from './RequirementMap'
 
 export function AnalysisResultPage() {
@@ -51,7 +53,7 @@ export function AnalysisResultPage() {
       {analysis.result === null || analysis.score === null ? (
         <FailedAnalysis analysis={analysis} />
       ) : (
-        <AnalysisBody result={analysis.result} score={analysis.score} />
+        <AnalysisBody result={analysis.result} score={analysis.score} jobPostingId={analysis.jobPostingId} />
       )}
 
       <details className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-4 text-sm text-graphite">
@@ -149,7 +151,17 @@ function CvChecklist({ items }: { items: string[] }) {
   )
 }
 
-function AnalysisBody({ result, score }: { result: JobAnalysisResult; score: ScoreContext }) {
+function AnalysisBody({ result, score, jobPostingId }: { result: JobAnalysisResult; score: ScoreContext; jobPostingId: string | null }) {
+  const [summary, setSummary] = useState(result.adaptedProfessionalSummary)
+  const [coverLetter, setCoverLetter] = useState(result.coverLetterDraft)
+  const postingQuery = useQuery({
+    queryKey: jobPostingKeys.detail(jobPostingId ?? 'none'),
+    queryFn: () => getJobPosting(jobPostingId ?? ''),
+    enabled: jobPostingId !== null,
+    // The posting may have been deleted after the analysis; the analysis keeps its own snapshot.
+    retry: false,
+  })
+
   return (
     <>
       <Verdict result={result} score={score} />
@@ -180,15 +192,21 @@ function AnalysisBody({ result, score }: { result: JobAnalysisResult; score: Sco
         id="summary-title"
         title="Resumen profesional adaptado"
         original={result.adaptedProfessionalSummary}
+        text={summary}
+        onChange={setSummary}
         copyLabel="Copiar resumen profesional"
       />
       <EditableDraft
         id="letter-title"
         title="Borrador de carta de presentación"
         original={result.coverLetterDraft}
+        text={coverLetter}
+        onChange={setCoverLetter}
         copyLabel="Copiar carta de presentación"
         hint="Personalízala antes de enviarla."
       />
+
+      {postingQuery.data !== undefined && <ApplicationPanel posting={postingQuery.data} adaptedTexts={{ summary, coverLetter }} />}
 
       <aside aria-labelledby="disclaimer-title" className="rounded-[var(--radius-sheet)] bg-pen-soft p-5 text-sm">
         <h2 id="disclaimer-title" className="font-bold text-pen-strong">

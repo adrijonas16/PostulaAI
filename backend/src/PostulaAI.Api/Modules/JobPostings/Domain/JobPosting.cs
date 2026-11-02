@@ -12,6 +12,16 @@ public enum WorkMode
     Remote,
 }
 
+/// <summary>Where the user is with this posting. Recorded by the user; never inferred from other sites.</summary>
+public enum ApplicationStatus
+{
+    Saved,
+    Applied,
+    Interview,
+    Offer,
+    Rejected,
+}
+
 /// <summary>A job posting pasted by the user. Owned by exactly one user; never visible to others.</summary>
 public sealed class JobPosting
 {
@@ -31,6 +41,21 @@ public sealed class JobPosting
 
     public string? SourceUrl { get; set; }
 
+    public ApplicationStatus ApplicationStatus { get; set; }
+
+    /// <summary>Day the user applied. Required for every status except <see cref="ApplicationStatus.Saved"/>.</summary>
+    public DateOnly? AppliedOn { get; set; }
+
+    public string? ApplicationNotes { get; set; }
+
+    /// <summary>The professional summary the user actually sent, after their own edits.</summary>
+    public string? SubmittedSummary { get; set; }
+
+    /// <summary>The cover letter the user actually sent, after their own edits.</summary>
+    public string? SubmittedCoverLetter { get; set; }
+
+    public DateTimeOffset? ApplicationUpdatedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset UpdatedAt { get; set; }
@@ -46,6 +71,9 @@ public static class JobPostingLimits
     public const int Url = 500;
     public const int Search = 100;
     public const int MaxPageSize = 50;
+    public const int ApplicationNotes = 2_000;
+    public const int SubmittedSummary = 3_000;
+    public const int SubmittedCoverLetter = 8_000;
 }
 
 internal sealed class JobPostingConfiguration : IEntityTypeConfiguration<JobPosting>
@@ -57,6 +85,7 @@ internal sealed class JobPostingConfiguration : IEntityTypeConfiguration<JobPost
         builder.Property(posting => posting.Id).ValueGeneratedNever();
         builder.HasOne<User>().WithMany().HasForeignKey(posting => posting.UserId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(posting => new { posting.UserId, posting.CreatedAt });
+        builder.HasIndex(posting => new { posting.UserId, posting.ApplicationStatus });
 
         builder.Property(posting => posting.Title).HasMaxLength(JobPostingLimits.Title).IsRequired();
         builder.Property(posting => posting.Company).HasMaxLength(JobPostingLimits.Company);
@@ -64,5 +93,9 @@ internal sealed class JobPostingConfiguration : IEntityTypeConfiguration<JobPost
         builder.Property(posting => posting.WorkMode).HasConversion<string>().HasMaxLength(20);
         builder.Property(posting => posting.Description).HasMaxLength(JobPostingLimits.DescriptionMax).IsRequired();
         builder.Property(posting => posting.SourceUrl).HasMaxLength(JobPostingLimits.Url);
+        builder.Property(posting => posting.ApplicationStatus).HasConversion<string>().HasMaxLength(20);
+        builder.Property(posting => posting.ApplicationNotes).HasMaxLength(JobPostingLimits.ApplicationNotes);
+        builder.Property(posting => posting.SubmittedSummary).HasMaxLength(JobPostingLimits.SubmittedSummary);
+        builder.Property(posting => posting.SubmittedCoverLetter).HasMaxLength(JobPostingLimits.SubmittedCoverLetter);
     }
 }

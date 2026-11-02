@@ -107,8 +107,25 @@ export interface JobPostingRequest {
   sourceUrl: string | null
 }
 
+export const applicationStatuses = ['saved', 'applied', 'interview', 'offer', 'rejected'] as const
+export type ApplicationStatus = (typeof applicationStatuses)[number]
+
+export interface ApplicationRequest {
+  status: ApplicationStatus
+  /** yyyy-MM-dd; required for every status except "saved". */
+  appliedOn: string | null
+  notes: string | null
+  submittedSummary: string | null
+  submittedCoverLetter: string | null
+}
+
+export interface ApplicationResponse extends ApplicationRequest {
+  updatedAt: string | null
+}
+
 export interface JobPostingResponse extends JobPostingRequest {
   id: string
+  application: ApplicationResponse
   createdAt: string
   updatedAt: string
 }
@@ -119,6 +136,9 @@ export interface JobPostingSummary {
   company: string | null
   location: string | null
   workMode: WorkMode
+  sourceUrl: string | null
+  applicationStatus: ApplicationStatus
+  appliedOn: string | null
   createdAt: string
   updatedAt: string
 }

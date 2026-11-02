@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PostulaAI.Api.Modules.JobPostings.Contracts;
+using PostulaAI.Api.Modules.JobPostings.Domain;
 using PostulaAI.Api.Shared.Api;
 using PostulaAI.Api.Shared.Errors;
 
@@ -12,6 +13,7 @@ namespace PostulaAI.Api.Modules.JobPostings;
 public sealed class JobPostingsController(
     JobPostingService service,
     IValidator<JobPostingRequest> requestValidator,
+    IValidator<ApplicationRequest> applicationValidator,
     IValidator<JobPostingListQuery> queryValidator) : ApiControllerBase
 {
     private const int MaxRequestBytes = 128 * 1024;
@@ -23,9 +25,10 @@ public sealed class JobPostingsController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? search = null,
+        [FromQuery] ApplicationStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var query = new JobPostingListQuery(page, pageSize, search);
+        var query = new JobPostingListQuery(page, pageSize, search, status);
         var validation = await queryValidator.ValidateAsync(query, cancellationToken);
         if (!validation.IsValid)
         {
@@ -74,6 +77,24 @@ public sealed class JobPostingsController(
         }
 
         var result = await service.UpdateAsync(CurrentUserId, id, request, cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : ProblemFor(result.Error);
+    }
+
+    /// <summary>Records whether and when the user applied, and the texts they sent.</summary>
+    [HttpPut("{id:guid}/application")]
+    [RequestSizeLimit(MaxRequestBytes)]
+    [ProducesResponseType<JobPostingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateApplication(Guid id, ApplicationRequest request, CancellationToken cancellationToken)
+    {
+        var validation = await applicationValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            return ValidationProblemFor(validation);
+        }
+
+        var result = await service.UpdateApplicationAsync(CurrentUserId, id, request, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : ProblemFor(result.Error);
     }
 

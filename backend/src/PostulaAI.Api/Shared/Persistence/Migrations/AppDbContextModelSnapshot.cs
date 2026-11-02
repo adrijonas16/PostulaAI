@@ -200,6 +200,21 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ApplicationNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ApplicationStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("ApplicationUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("AppliedOn")
+                        .HasColumnType("date");
+
                     b.Property<string>("Company")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -220,6 +235,14 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("SubmittedCoverLetter")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<string>("SubmittedSummary")
+                        .HasMaxLength(3000)
+                        .HasColumnType("character varying(3000)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -237,6 +260,8 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId", "ApplicationStatus");
 
                     b.HasIndex("UserId", "CreatedAt");
 

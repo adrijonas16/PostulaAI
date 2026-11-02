@@ -1,9 +1,18 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import { CopyButton } from './CopyButton'
 
-/** A generated text the user can adjust before copying. Edits stay on this screen; nothing is saved. */
-export function EditableDraft({ id, title, original, copyLabel, hint }: { id: string; title: string; original: string; copyLabel: string; hint?: string }) {
-  const [text, setText] = useState(original)
+interface EditableDraftProps {
+  id: string
+  title: string
+  original: string
+  text: string
+  onChange: (text: string) => void
+  copyLabel: string
+  hint?: string
+}
+
+/** A generated text the user can adjust before copying. Edits are only saved if the user records the application. */
+export function EditableDraft({ id, title, original, text, onChange, copyLabel, hint }: EditableDraftProps) {
   const fieldId = useId()
   const edited = text !== original
 
@@ -21,12 +30,12 @@ export function EditableDraft({ id, title, original, copyLabel, hint }: { id: st
       <textarea
         id={fieldId}
         value={text}
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         rows={Math.min(16, Math.max(4, Math.ceil(original.length / 90) + original.split('\n').length))}
         className="mt-2 w-full resize-y rounded-[var(--radius-field)] border border-rule bg-paper p-3 text-[0.95rem] leading-relaxed focus:border-pen focus:bg-sheet focus:outline-none focus:ring-2 focus:ring-pen-soft"
       />
       {edited && (
-        <button type="button" onClick={() => setText(original)} className="mt-2 text-sm font-semibold text-pen underline">
+        <button type="button" onClick={() => onChange(original)} className="mt-2 text-sm font-semibold text-pen underline">
           Volver al texto original
         </button>
       )}

@@ -9,6 +9,7 @@
 - **Cuenta:** correo electrónico, nombre y contraseña (guardamos solo una versión cifrada de forma irreversible).
 - **Perfil profesional:** lo que tú escribes: experiencia, educación, proyectos, certificaciones, habilidades, idiomas y enlaces.
 - **Vacantes:** el texto de las ofertas que pegas.
+- **Postulaciones:** el estado y la fecha de postulación que registras, tus notas y, si lo eliges, el resumen y la carta que enviaste.
 - **Análisis:** los resultados generados y una copia del perfil y la vacante usados en cada análisis.
 - **Datos técnicos mínimos:** registros de actividad sin el contenido de tu perfil ni de tus vacantes, para seguridad y diagnóstico.
 

@@ -31,6 +31,29 @@ public sealed class JobPostingRequestValidator : AbstractValidator<JobPostingReq
             && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp));
 }
 
+public sealed class ApplicationRequestValidator : AbstractValidator<ApplicationRequest>
+{
+    public ApplicationRequestValidator(TimeProvider time)
+    {
+        ArgumentNullException.ThrowIfNull(time);
+
+        RuleFor(request => request.Status).IsInEnum().WithMessage("Estado de postulación no válido.");
+        RuleFor(request => request.AppliedOn)
+            .NotNull().When(request => request.Status != ApplicationStatus.Saved)
+            .WithMessage("Indica la fecha en que te postulaste.");
+        RuleFor(request => request.AppliedOn)
+            // One day of slack so a user ahead of UTC can record "today".
+            .Must(date => date is null || date.Value <= DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime).AddDays(1))
+            .WithMessage("La fecha de postulación no puede estar en el futuro.");
+        RuleFor(request => request.Notes)
+            .MaximumLength(JobPostingLimits.ApplicationNotes).WithMessage($"Las notas no pueden superar {JobPostingLimits.ApplicationNotes} caracteres.");
+        RuleFor(request => request.SubmittedSummary)
+            .MaximumLength(JobPostingLimits.SubmittedSummary).WithMessage($"El resumen no puede superar {JobPostingLimits.SubmittedSummary} caracteres.");
+        RuleFor(request => request.SubmittedCoverLetter)
+            .MaximumLength(JobPostingLimits.SubmittedCoverLetter).WithMessage($"La carta no puede superar {JobPostingLimits.SubmittedCoverLetter} caracteres.");
+    }
+}
+
 public sealed class JobPostingListQueryValidator : AbstractValidator<JobPostingListQuery>
 {
     public JobPostingListQueryValidator()
@@ -40,5 +63,6 @@ public sealed class JobPostingListQueryValidator : AbstractValidator<JobPostingL
             .WithMessage($"El tamaño de página debe estar entre 1 y {JobPostingLimits.MaxPageSize}.");
         RuleFor(query => query.Search).MaximumLength(JobPostingLimits.Search)
             .WithMessage($"La búsqueda no puede superar {JobPostingLimits.Search} caracteres.");
+        RuleFor(query => query.Status).IsInEnum().WithMessage("Estado de postulación no válido.");
     }
 }

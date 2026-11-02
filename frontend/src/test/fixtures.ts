@@ -44,6 +44,7 @@ export const samplePosting: JobPostingResponse = {
   workMode: 'hybrid',
   description: 'Requisitos: 3 años con C# y ASP.NET Core, PostgreSQL. Deseable: Docker.',
   sourceUrl: 'https://empleos.example.test/vacante/1',
+  application: { status: 'saved', appliedOn: null, notes: null, submittedSummary: null, submittedCoverLetter: null, updatedAt: null },
   createdAt: '2026-11-01T15:00:00Z',
   updatedAt: '2026-11-01T15:00:00Z',
 }
@@ -55,6 +56,9 @@ export function postingSummary(index: number): JobPostingSummary {
     company: index % 2 === 0 ? null : `Empresa ${index}`,
     location: 'Bogotá',
     workMode: 'remote',
+    sourceUrl: null,
+    applicationStatus: 'saved',
+    appliedOn: null,
     createdAt: '2026-11-01T15:00:00Z',
     updatedAt: '2026-11-01T15:00:00Z',
   }

@@ -18,6 +18,7 @@ import {
   workModeLabels,
   type JobPostingFormValues,
 } from './jobPostingForm'
+import { ApplicationPanel } from './ApplicationPanel'
 import { createJobPosting, getJobPosting, jobPostingKeys, updateJobPosting } from './jobsApi'
 import { workModes, type JobPostingRequest } from '../../shared/api/types'
 
@@ -103,7 +104,14 @@ export function JobPostingEditorPage() {
       </h1>
       <p className="mt-2 text-graphite">Pega la oferta tal como la publicó la empresa. El análisis compara tu perfil con este texto.</p>
 
-      <form noValidate onSubmit={onSubmit} className="mt-8 space-y-5 rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5">
+      {postingQuery.data !== undefined && (
+        <div className="mt-8">
+          <ApplicationPanel posting={postingQuery.data} />
+        </div>
+      )}
+
+      {postingQuery.data !== undefined && <h2 className="mt-10 text-lg font-bold">Datos de la vacante</h2>}
+      <form noValidate onSubmit={onSubmit} className="mt-4 space-y-5 rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5">
         {formError !== null && <Alert tone="error">{formError}</Alert>}
         <TextField label="Título del cargo" required error={errors.title?.message} {...register('title')} />
         <div className="grid gap-4 md:grid-cols-2">
