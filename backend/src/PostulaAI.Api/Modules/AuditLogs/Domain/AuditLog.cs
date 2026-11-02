@@ -38,6 +38,7 @@ public static class AuditActions
     public const string AnalysisCompleted = "analysis.completed";
     public const string AnalysisFailed = "analysis.failed";
     public const string AnalysisDeleted = "analysis.deleted";
+    public const string CvImported = "profile.cv_imported";
 }
 
 internal sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
