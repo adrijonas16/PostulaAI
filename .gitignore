@@ -1,0 +1,44 @@
+# --- Secrets & local config ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+secrets.json
+appsettings.*.local.json
+
+# --- .NET ---
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+.vs/
+*.trx
+
+# --- Node ---
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.tsbuildinfo
+
+# --- Local databases & logs ---
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+logs/
+*.log
+
+# --- Evaluations: raw provider responses are never committed; only generated summaries/reports ---
+evals/results/raw/
+evals/.cache/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
