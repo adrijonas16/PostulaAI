@@ -4,7 +4,7 @@
   PostulaAI visual language: preparing an application on paper.
   - paper/sheet: neutral cool paper, white sheets
   - pen (blue ballpoint): actions and navigation
-  - marker (yellow highlighter): what your profile proves
+  - marker (green highlighter): what your profile proves
   - redpen (correction pen): what is missing
   Typeface: Atkinson Hyperlegible Next, designed for legibility (self-hosted, no third-party requests).
   Legacy token names (accent, surface, canvas, line, ink-muted) map to the same palette.
@@ -22,8 +22,8 @@
   --color-pen-strong: #1a3087;
   --color-pen-soft: #e6ebfa;
 
-  --color-marker: #f7e46b;
-  --color-marker-soft: #fbf3bc;
+  --color-marker: #8fdc9a;
+  --color-marker-soft: #dcf5e0;
 
   --color-redpen: #c2362b;
   --color-redpen-soft: #fbe7e4;
