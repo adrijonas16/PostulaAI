@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using PostulaAI.AI.Clients;
 using Npgsql;
 using PostulaAI.Api.Shared.Persistence;
 
@@ -35,8 +38,20 @@ public sealed class DatabaseApiFactory : TestApiFactory, IAsyncLifetime
             var settings = base.Settings;
             settings["ConnectionStrings:Postgres"] = connectionString;
             settings["Database:ApplyMigrationsOnStartup"] = "true";
+            settings["UsageLimits:Analyses:MaxPerWindow"] = AnalysisLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
             return settings;
         }
+    }
+
+    public const int AnalysisLimit = 3;
+
+    /// <summary>Stands in for Claude in every database-backed test. Never calls the real API.</summary>
+    public ScriptedAIClient AI { get; } = new();
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.ConfigureTestServices(services => services.AddSingleton<IAIClient>(AI));
     }
 
     public async Task<T> WithDbAsync<T>(Func<AppDbContext, Task<T>> action)
