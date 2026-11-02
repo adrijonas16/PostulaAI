@@ -22,6 +22,7 @@ Compatibilidad **explicada** (nunca un número aislado), fortalezas respaldadas 
 |---|---|
 | Registro, inicio y cierre de sesión | ✅ 1 |
 | Perfil profesional: experiencia, educación, proyectos, certificaciones, habilidades, idiomas y enlaces | ✅ 1 |
+| Importar el perfil desde un CV (PDF o Word): precarga el formulario para revisarlo; solo copia lo que dice el CV | ✅ |
 | Vacantes: crear, editar, eliminar e historial con búsqueda | ✅ 2 |
 | Análisis con IA: compatibilidad estimada, fortalezas, brechas, palabras clave, recomendaciones, resumen adaptado y carta de presentación | ✅ 3–4 |
 | Historial y detalle de análisis | ✅ 3–4 |
@@ -191,7 +192,7 @@ Aún no hay despliegue público (Fase 6).
 - La eliminación de cuenta aún no está disponible (roadmap).
 - El backend se compila y se prueba en GitHub Actions; el entorno de desarrollo asistido no tiene el SDK de .NET, y la migración inicial se generó con `dotnet ef` en CI.
 - El análisis no verifica la veracidad del perfil: toma como cierto lo que el usuario escribe.
-- Solo entrada manual de texto. No hay carga de PDF.
+- La importación de CV necesita PDF con texto (no escaneado) o .docx; las tablas y columnas complejas pueden leerse en desorden. El usuario siempre revisa el borrador antes de guardar.
 - El puntaje es una estimación no calibrada contra resultados reales de contratación.
 
 ## Roadmap

@@ -88,6 +88,23 @@ La verificación contra invención revisa la evidencia de cada fortaleza, el res
 | `ai_invalid_output` | 502 | El resultado no pasó la validación ni tras la reparación. |
 | `ai_refused` / `ai_request_rejected` | 422 | El modelo se negó o la API rechazó la solicitud. |
 
+## Importación de CV
+
+Un segundo flujo, separado del análisis, usa la misma biblioteca:
+
+```text
+Archivo PDF/DOCX (máx. 5 MB, tipo detectado por contenido)
+→ extracción de texto en memoria (PdfPig / OOXML); el archivo nunca se guarda
+→ prompt versionado cv-extraction-v1 (copiar, no inventar ni traducir; desconocido = null)
+→ Claude con salida estructurada (Schemas/cv-extraction-v1.schema.json)
+→ deserialización estricta; un solo reintento con cv-extraction-repair-v1
+→ verificación: se eliminan habilidades, tecnologías e idiomas que no aparecen literalmente en el CV (con aviso)
+→ normalización a las reglas del perfil (fechas, URLs http/https, límites, duplicados)
+→ borrador NO guardado: el usuario lo revisa, completa lo que falte y guarda
+```
+
+Endpoint: `POST /api/v1/profiles/me/import` (multipart, campo `file`). Límite por usuario: 5 importaciones por hora (`RateLimiting:CvImport`). Errores propios: `cv_unsupported_format` 415, `cv_too_large` 413, `cv_no_text` y `cv_unreadable` 422, además de los `ai_*`.
+
 ## Abstracción del proveedor
 
 `IAIClient` (en `PostulaAI.AI/Clients`) recibe un prompt de sistema, mensajes y un máximo de tokens, y devuelve contenido, modelo, tokens, latencia y motivo de parada. La lógica de producto no conoce a Claude. Cambiar de proveedor implica una nueva implementación de `IAIClient` y volver a ejecutar las evaluaciones.
