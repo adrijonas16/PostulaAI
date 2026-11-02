@@ -69,7 +69,7 @@ public sealed class PromptAndSchemaTests
         using var schema = JsonDocument.Parse(OutputSchemas.Load(OutputSchemas.JobAnalysisV1));
         var root = schema.RootElement;
         var properties = root.GetProperty("properties").EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal).ToList();
-        var required = root.GetProperty("required").EnumerateArray().Select(item => item.GetString()).Order(StringComparer.Ordinal).ToList();
+        var required = root.GetProperty("required").EnumerateArray().Select(item => item.GetString() ?? string.Empty).Order(StringComparer.Ordinal).ToList();
         var contract = typeof(JobAnalysisResult).GetProperties()
             .Select(property => char.ToLowerInvariant(property.Name[0]) + property.Name[1..])
             .Order(StringComparer.Ordinal)
@@ -86,7 +86,7 @@ public sealed class PromptAndSchemaTests
         using var schema = JsonDocument.Parse(OutputSchemas.Load(OutputSchemas.JobAnalysisV1));
         var gapTypes = schema.RootElement.GetProperty("properties").GetProperty("gaps").GetProperty("items")
             .GetProperty("properties").GetProperty("gapType").GetProperty("enum")
-            .EnumerateArray().Select(item => item.GetString()).ToList();
+            .EnumerateArray().Select(item => item.GetString() ?? string.Empty).ToList();
 
         var contract = Enum.GetValues<GapType>()
             .Select(value => JsonSerializer.Serialize(value, JobAnalysisJson.Options).Trim('"'))
