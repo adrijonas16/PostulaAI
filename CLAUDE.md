@@ -53,7 +53,8 @@ docker compose up --build                  # todo el stack
 # Backend
 dotnet restore backend/PostulaAI.slnx
 dotnet build   backend/PostulaAI.slnx
-dotnet test    backend/PostulaAI.slnx
+dotnet test    backend/PostulaAI.slnx      # integración: requiere ConnectionStrings__Postgres (crea y borra su propia BD)
+dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project backend/src/PostulaAI.Api
 dotnet run --project backend/src/PostulaAI.Api
 dotnet ef migrations add <Nombre> --project backend/src/PostulaAI.Api
 

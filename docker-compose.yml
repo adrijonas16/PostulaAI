@@ -23,7 +23,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-postulaai};Username=${POSTGRES_USER:-postulaai};Password=${POSTGRES_PASSWORD}
-      Jwt__SigningKey: ${JWT_SIGNING_KEY:-}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env (at least 32 random bytes)}
       Anthropic__ApiKey: ${ANTHROPIC_API_KEY:-}
       Anthropic__Model: ${ANTHROPIC_MODEL:-}
     depends_on:

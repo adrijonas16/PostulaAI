@@ -2,7 +2,7 @@
 
 Plataforma web que compara tu perfil profesional con una vacante y te dice, con evidencia, en qué coincides, qué te falta y cómo adaptar tu postulación, **sin inventar nada**.
 
-> **Estado del proyecto: Fase 0 (base del repositorio).** Las funcionalidades descritas abajo son el alcance del MVP; aún no están implementadas. Consulta el [roadmap](docs/roadmap.md).
+> **Estado del proyecto: Fase 1 completada** (cuentas, sesión segura y perfil profesional). El análisis con IA aún no está implementado. Consulta el [roadmap](docs/roadmap.md).
 
 ## Problema
 
@@ -20,8 +20,8 @@ Compatibilidad **explicada** (nunca un número aislado), fortalezas respaldadas 
 
 | Funcionalidad | Fase |
 |---|---|
-| Registro, inicio y cierre de sesión | 1 |
-| Perfil profesional: experiencia, educación, proyectos, certificaciones, habilidades, idiomas y enlaces | 1 |
+| Registro, inicio y cierre de sesión | ✅ 1 |
+| Perfil profesional: experiencia, educación, proyectos, certificaciones, habilidades, idiomas y enlaces | ✅ 1 |
 | Vacantes: crear, editar, eliminar e historial | 2 |
 | Análisis con IA: compatibilidad estimada, fortalezas, brechas, palabras clave, recomendaciones, resumen adaptado y carta de presentación | 3–4 |
 | Historial y detalle de análisis | 2–4 |
@@ -37,9 +37,9 @@ La IA **nunca** afirma experiencia, estudios, habilidades, certificaciones o log
 |---|---|
 | Backend | ASP.NET Core sobre **.NET 10 LTS**, Entity Framework Core, Npgsql |
 | Base de datos | PostgreSQL 16 |
-| Frontend | React 19, TypeScript (strict), Vite, React Router, Tailwind CSS |
+| Frontend | React 19, TypeScript (strict), Vite, React Router, TanStack Query, react-hook-form + zod, Tailwind CSS |
 | IA | Claude API (solo desde el backend) detrás de la interfaz `IAIClient` |
-| Pruebas | xUnit, WebApplicationFactory · Vitest, Testing Library |
+| Pruebas | xUnit, WebApplicationFactory + PostgreSQL real · Vitest, Testing Library, MSW |
 | Calidad | Warnings como errores en C#, oxlint, gitleaks, Dependabot |
 | Infraestructura | Docker Compose, GitHub Actions |
 
@@ -90,8 +90,11 @@ docker compose up -d postgres
 ### Backend
 
 ```bash
-export ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=postulaai;Username=postulaai;Password=<tu-password-local>"
-dotnet run --project backend/src/PostulaAI.Api
+# Secretos locales fuera del repositorio (user-secrets de .NET)
+dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project backend/src/PostulaAI.Api
+dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=postulaai;Username=postulaai;Password=<tu-password-local>" --project backend/src/PostulaAI.Api
+
+dotnet run --project backend/src/PostulaAI.Api   # en Development aplica las migraciones al iniciar
 # API:      http://localhost:5080
 # Salud:    http://localhost:5080/health/live · /health/ready
 # Swagger:  http://localhost:5080/swagger (solo en Development)
@@ -119,7 +122,7 @@ docker compose up --build
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Base de datos de Docker Compose | Fase 0 |
 | `ConnectionStrings__Postgres` | Cadena de conexión del backend | Fase 0 |
 | `ASPNETCORE_ENVIRONMENT` | `Development` / `Production` | Fase 0 |
-| `JWT_SIGNING_KEY` | Clave de firma JWT (≥ 32 bytes aleatorios) | Fase 1 |
+| `JWT_SIGNING_KEY` (`Jwt__SigningKey` en el backend) | Clave de firma JWT, **obligatoria**, ≥ 32 bytes aleatorios. Sin ella la API no arranca | Fase 1 |
 | `ANTHROPIC_API_KEY` | Clave de la API de Claude (solo backend) | Fase 3 |
 | `ANTHROPIC_MODEL` | Identificador del modelo | Fase 3 |
 
@@ -127,9 +130,12 @@ Nunca se commitean valores reales. Ver [docs/security.md](docs/security.md).
 
 ## Pruebas
 
+Las pruebas de integración usan una base PostgreSQL real que crean y eliminan solas; necesitan `ConnectionStrings__Postgres` apuntando a un servidor donde el usuario pueda crear bases (por ejemplo, el de `docker compose up -d postgres`).
+
 [![CI](https://github.com/adrijonas16/PostulaAI/actions/workflows/ci.yml/badge.svg)](https://github.com/adrijonas16/PostulaAI/actions/workflows/ci.yml)
 
 ```bash
+export ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=postgres;Username=postulaai;Password=<tu-password-local>"
 dotnet test backend/PostulaAI.slnx
 
 cd frontend
@@ -158,8 +164,11 @@ Aún no hay despliegue público (Fase 6).
 
 ## Limitaciones conocidas
 
-- **Fase 0:** solo existen la estructura, los endpoints de salud y las pantallas de marcador de posición. No hay autenticación ni análisis.
-- El backend se compila y se prueba en GitHub Actions; el entorno donde se creó la Fase 0 no tenía el SDK de .NET.
+- Aún no existen vacantes ni análisis con IA (Fases 2 a 4); esas pantallas son marcadores.
+- Registrarse con un correo ya usado responde "ya existe una cuenta": permite saber si un correo está registrado (compromiso aceptado en v1, mitigado con límite de intentos).
+- Si la misma sesión se abre en varias pestañas, un refresco simultáneo puede cerrar la sesión (detección de reutilización del refresh token). Dentro de una pestaña las renovaciones son de un solo vuelo.
+- La eliminación de cuenta aún no está disponible (roadmap).
+- El backend se compila y se prueba en GitHub Actions; el entorno de desarrollo asistido no tiene el SDK de .NET, y la migración inicial se generó con `dotnet ef` en CI.
 - El análisis no verifica la veracidad del perfil: toma como cierto lo que el usuario escribe.
 - Solo entrada manual de texto. No hay carga de PDF.
 - El puntaje es una estimación no calibrada contra resultados reales de contratación.
