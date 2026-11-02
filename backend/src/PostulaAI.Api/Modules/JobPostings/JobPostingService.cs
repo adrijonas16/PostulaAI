@@ -56,7 +56,7 @@ public sealed class JobPostingService(AppDbContext db, IAuditTrail audit, TimePr
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var now = time.GetUtcNow();
+        var now = time.GetUtcNowForStorage();
         var posting = new JobPosting
         {
             UserId = userId,
@@ -85,7 +85,7 @@ public sealed class JobPostingService(AppDbContext db, IAuditTrail audit, TimePr
         }
 
         Apply(request, posting);
-        posting.UpdatedAt = time.GetUtcNow();
+        posting.UpdatedAt = time.GetUtcNowForStorage();
         audit.Record(AuditActions.JobPostingUpdated, userId, nameof(JobPosting), posting.Id);
         await db.SaveChangesAsync(cancellationToken);
         return ToResponse(posting);

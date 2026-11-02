@@ -20,7 +20,7 @@ public sealed class AuditTrail(AppDbContext db, TimeProvider time, IHttpContextA
             EntityType = entityType,
             EntityId = entityId,
             CorrelationId = httpContextAccessor.HttpContext?.TraceIdentifier,
-            OccurredAt = time.GetUtcNow(),
+            OccurredAt = time.GetUtcNowForStorage(),
         });
     }
 }

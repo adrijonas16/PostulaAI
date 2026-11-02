@@ -2,6 +2,8 @@ using System.Linq.Expressions;
 using FluentValidation;
 using PostulaAI.Api.Modules.ProfessionalProfiles.Domain;
 
+using PostulaAI.Api.Shared.Persistence;
+
 namespace PostulaAI.Api.Modules.ProfessionalProfiles.Contracts;
 
 public sealed class ProfileRequestValidator : AbstractValidator<ProfileRequest>
@@ -9,7 +11,7 @@ public sealed class ProfileRequestValidator : AbstractValidator<ProfileRequest>
     public ProfileRequestValidator(TimeProvider time)
     {
         ArgumentNullException.ThrowIfNull(time);
-        var today = DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime);
+        var today = DateOnly.FromDateTime(time.GetUtcNowForStorage().UtcDateTime);
 
         RuleFor(request => request.FullName)
             .Must(NotBlank).WithMessage("Ingresa tu nombre profesional.")

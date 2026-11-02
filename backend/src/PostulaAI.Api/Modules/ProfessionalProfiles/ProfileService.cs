@@ -26,7 +26,7 @@ public sealed class ProfileService(AppDbContext db, IAuditTrail audit, TimeProvi
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var now = time.GetUtcNow();
+        var now = time.GetUtcNowForStorage();
         var profile = await LoadAsync(userId, tracking: true, cancellationToken);
         if (profile is null)
         {
