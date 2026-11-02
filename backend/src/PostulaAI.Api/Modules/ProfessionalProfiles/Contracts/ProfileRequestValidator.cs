@@ -110,16 +110,20 @@ public sealed class ProfileRequestValidator : AbstractValidator<ProfileRequest>
             && Uri.TryCreate(value, UriKind.Absolute, out var uri)
             && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp));
 
-    private static Func<IReadOnlyList<T>, bool> HaveNoDuplicates<T>(Func<T, string> key) =>
-        items => items.Select(key).Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() == items.Count;
+    private static Func<IEnumerable<T>, bool> HaveNoDuplicates<T>(Func<T, string> key) =>
+        items =>
+        {
+            var keys = items.Select(key).Select(value => value.Trim()).ToList();
+            return keys.Distinct(StringComparer.OrdinalIgnoreCase).Count() == keys.Count;
+        };
 
     private static void AddTagRules<T>(
         AbstractValidator<T> validator,
-        Expression<Func<T, IReadOnlyList<string>>> selector,
+        Expression<Func<T, IEnumerable<string>>> selector,
         int maxItems)
     {
         validator.RuleFor(selector)
-            .Must(items => items.Count <= maxItems).WithMessage($"Puedes registrar hasta {maxItems} elementos.")
+            .Must(items => items.Count() <= maxItems).WithMessage($"Puedes registrar hasta {maxItems} elementos.")
             .Must(HaveNoDuplicates<string>(item => item)).WithMessage("Hay elementos repetidos.");
         validator.RuleForEach(selector)
             .Must(NotBlank).WithMessage("No puede haber elementos vacíos.")
