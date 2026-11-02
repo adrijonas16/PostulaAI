@@ -91,6 +91,8 @@ powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1
 
 Luego abre http://localhost:5173. Para detenerlo: `docker compose down`.
 
+El script comprueba antes que los puertos estén libres y te dice qué programa los ocupa. Puertos por defecto en tu equipo: app `5173`, API `58080`, PostgreSQL `55432` (elegido para no chocar con un PostgreSQL instalado localmente en `5432`). Se cambian en `.env` con `WEB_HOST_PORT`, `API_HOST_PORT` y `POSTGRES_HOST_PORT`.
+
 ### Configuración manual
 
 ```bash
@@ -108,7 +110,7 @@ docker compose up -d postgres
 ```bash
 # Secretos locales fuera del repositorio (user-secrets de .NET)
 dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project backend/src/PostulaAI.Api
-dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=postulaai;Username=postulaai;Password=<tu-password-local>" --project backend/src/PostulaAI.Api
+dotnet user-secrets set "ConnectionStrings:Postgres" "Host=localhost;Port=55432;Database=postulaai;Username=postulaai;Password=<tu-password-local>" --project backend/src/PostulaAI.Api
 
 dotnet run --project backend/src/PostulaAI.Api   # en Development aplica las migraciones al iniciar
 # API:      http://localhost:5080
@@ -128,7 +130,7 @@ npm run dev              # http://localhost:5173 (hace de proxy de /api hacia :5
 
 ```bash
 docker compose up --build
-# Frontend: http://localhost:5173 · API: http://localhost:8080
+# Frontend: http://localhost:5173 · API: http://localhost:58080
 ```
 
 ## Variables de entorno
@@ -151,7 +153,7 @@ Las pruebas de integración usan una base PostgreSQL real que crean y eliminan s
 [![CI](https://github.com/adrijonas16/PostulaAI/actions/workflows/ci.yml/badge.svg)](https://github.com/adrijonas16/PostulaAI/actions/workflows/ci.yml)
 
 ```bash
-export ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=postgres;Username=postulaai;Password=<tu-password-local>"
+export ConnectionStrings__Postgres="Host=localhost;Port=55432;Database=postgres;Username=postulaai;Password=<tu-password-local>"
 dotnet test backend/PostulaAI.slnx
 
 cd frontend

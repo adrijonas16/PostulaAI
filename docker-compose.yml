@@ -1,5 +1,6 @@
 # Local stack: PostgreSQL + API + frontend.
 # Requires a .env file (copy .env.example). No real secrets belong in this file.
+# Host ports are configurable (POSTGRES_HOST_PORT, API_HOST_PORT, WEB_HOST_PORT) to avoid clashes with local services.
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,7 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postulaai}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -30,7 +31,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${API_HOST_PORT:-58080}:8080"
 
   frontend:
     build:
@@ -38,7 +39,7 @@ services:
     depends_on:
       - api
     ports:
-      - "127.0.0.1:5173:80"
+      - "127.0.0.1:${WEB_HOST_PORT:-5173}:80"
 
 volumes:
   postgres-data:
