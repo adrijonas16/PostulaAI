@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: **Fase 1**. Lo implementado se indica con ✅; lo demás está planificado.
+> Estado: **Fase 2**. Lo implementado se indica con ✅; lo demás está planificado.
 
 ## Secretos
 
@@ -27,7 +27,9 @@
 
 - ✅ Cada recurso pertenece a un `UserId`. Los servicios reciben el `UserId` del token y filtran por él.
 - ✅ El perfil solo es accesible por `/profiles/me`: no existe ruta para leer el de otro usuario. Una prueba de integración A/B lo verifica.
-- Recursos con identificador (vacantes, análisis): un recurso ajeno responde `404` *(Fases 2 y 3)*.
+- ✅ Vacantes: toda consulta filtra por `UserId` y `Id` a la vez; una vacante ajena responde `404` en GET, PUT y DELETE y nunca aparece en el listado (prueba de integración A/B).
+- ✅ La búsqueda escapa los comodines de `LIKE`, así que el texto del usuario se compara literalmente.
+- Análisis: misma regla *(Fase 3)*.
 
 ## Datos personales
 
