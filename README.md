@@ -75,7 +75,23 @@ Cada análisis guarda su estado, el prompt y su versión, el modelo, el idioma, 
 - Node.js 22+
 - Docker (para PostgreSQL o para el stack completo)
 
-### Configuración
+### Opción rápida (Docker)
+
+Con Docker Desktop abierto, un solo comando crea `.env` con secretos aleatorios, construye todo y espera a que esté listo:
+
+```powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1
+```
+
+```bash
+# macOS / Linux
+./scripts/dev-up.sh
+```
+
+Luego abre http://localhost:5173. Para detenerlo: `docker compose down`.
+
+### Configuración manual
 
 ```bash
 cp .env.example .env     # reemplaza los valores de ejemplo
