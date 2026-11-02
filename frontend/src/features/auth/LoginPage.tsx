@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import { applyServerErrors } from '../../shared/lib/applyServerErrors'
 import { Alert } from '../../shared/ui/Alert'
 import { Button } from '../../shared/ui/Button'
@@ -9,17 +9,8 @@ import { TextField } from '../../shared/ui/fields'
 import { useAuth } from './AuthContext'
 import { loginSchema, type LoginFormValues } from './schemas'
 
-function redirectTarget(state: unknown): string {
-  if (typeof state === 'object' && state !== null && 'from' in state && typeof state.from === 'string' && state.from.startsWith('/app')) {
-    return state.from
-  }
-  return '/app'
-}
-
 export function LoginPage() {
   const { login } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [formError, setFormError] = useState<string | null>(null)
   const {
     register,
@@ -31,8 +22,8 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null)
     try {
+      // On success the RedirectIfAuthenticated guard navigates to the requested page.
       await login(values)
-      await navigate(redirectTarget(location.state), { replace: true })
     } catch (error) {
       setFormError(applyServerErrors(error, setError))
     }
