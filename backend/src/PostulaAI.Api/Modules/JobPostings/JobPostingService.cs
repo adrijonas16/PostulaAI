@@ -27,6 +27,11 @@ public sealed class JobPostingService(AppDbContext db, IAuditTrail audit, TimePr
                 || (posting.Company != null && EF.Functions.ILike(posting.Company, pattern, "\\")));
         }
 
+        if (query.Status is { } status)
+        {
+            postings = postings.Where(posting => posting.ApplicationStatus == status);
+        }
+
         var totalCount = await postings.CountAsync(cancellationToken);
         var items = await postings
             .OrderByDescending(posting => posting.CreatedAt)
@@ -34,7 +39,16 @@ public sealed class JobPostingService(AppDbContext db, IAuditTrail audit, TimePr
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(posting => new JobPostingSummary(
-                posting.Id, posting.Title, posting.Company, posting.Location, posting.WorkMode, posting.CreatedAt, posting.UpdatedAt))
+                posting.Id,
+                posting.Title,
+                posting.Company,
+                posting.Location,
+                posting.WorkMode,
+                posting.SourceUrl,
+                posting.ApplicationStatus,
+                posting.AppliedOn,
+                posting.CreatedAt,
+                posting.UpdatedAt))
             .ToListAsync(cancellationToken);
 
         return new PagedResponse<JobPostingSummary>(items, query.Page, query.PageSize, totalCount);
@@ -91,6 +105,29 @@ public sealed class JobPostingService(AppDbContext db, IAuditTrail audit, TimePr
         return ToResponse(posting);
     }
 
+    public async Task<Result<JobPostingResponse>> UpdateApplicationAsync(
+        Guid userId, Guid id, ApplicationRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var posting = await db.JobPostings
+            .SingleOrDefaultAsync(candidate => candidate.Id == id && candidate.UserId == userId, cancellationToken);
+        if (posting is null)
+        {
+            return NotFound;
+        }
+
+        posting.ApplicationStatus = request.Status;
+        posting.AppliedOn = request.AppliedOn;
+        posting.ApplicationNotes = Clean(request.Notes);
+        posting.SubmittedSummary = Clean(request.SubmittedSummary);
+        posting.SubmittedCoverLetter = Clean(request.SubmittedCoverLetter);
+        posting.ApplicationUpdatedAt = time.GetUtcNowForStorage();
+        audit.Record(AuditActions.JobPostingApplicationUpdated, userId, nameof(JobPosting), posting.Id);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToResponse(posting);
+    }
+
     /// <summary>Returns false when the posting does not exist or belongs to another user.</summary>
     public async Task<bool> DeleteAsync(Guid userId, Guid id, CancellationToken cancellationToken)
     {
@@ -136,6 +173,13 @@ public sealed class JobPostingService(AppDbContext db, IAuditTrail audit, TimePr
         posting.WorkMode,
         posting.Description,
         posting.SourceUrl,
+        new ApplicationResponse(
+            posting.ApplicationStatus,
+            posting.AppliedOn,
+            posting.ApplicationNotes,
+            posting.SubmittedSummary,
+            posting.SubmittedCoverLetter,
+            posting.ApplicationUpdatedAt),
         posting.CreatedAt,
         posting.UpdatedAt);
 }
