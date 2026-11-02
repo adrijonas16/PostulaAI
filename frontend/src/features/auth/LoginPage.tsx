@@ -31,10 +31,10 @@ export function LoginPage() {
 
   return (
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-sm">
-      <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
+      <h1 id="page-title" className="text-3xl font-bold">
         Iniciar sesión
       </h1>
-      <p className="mt-2 text-sm text-ink-muted">Accede a tu perfil, tus vacantes y tu historial de análisis.</p>
+      <p className="mt-2 text-sm text-graphite">Accede a tu perfil, tus vacantes y tu historial de análisis.</p>
 
       <form noValidate onSubmit={onSubmit} className="mt-8 space-y-4">
         {formError !== null && <Alert tone="error">{formError}</Alert>}
@@ -45,9 +45,9 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-sm text-ink-muted">
+      <p className="mt-6 text-sm text-graphite">
         ¿No tienes cuenta?{' '}
-        <Link to="/registro" className="font-medium text-accent underline">
+        <Link to="/registro" className="font-semibold text-pen underline">
           Crear cuenta
         </Link>
       </p>

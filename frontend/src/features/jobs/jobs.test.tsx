@@ -108,8 +108,8 @@ describe('job postings list', () => {
 
     const list = await screen.findByRole('list', { name: /vacantes guardadas/i })
     expect(within(list).getByText('Vacante 1')).toBeInTheDocument()
-    expect(within(list).getByText(/empresa 1 · bogotá · remota/i)).toBeInTheDocument()
-    expect(screen.getByText(/página 1 de 2 · 12 vacantes/i)).toBeInTheDocument()
+    expect(within(list).getByText(/empresa 1, bogotá, remota/i)).toBeInTheDocument()
+    expect(screen.getByText(/página 1 de 2 \(12 vacantes\)/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))

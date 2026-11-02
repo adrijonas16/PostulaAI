@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider, createBrowserRouter } from 'react-router'
 import { AppProviders } from './app/AppProviders'
 import { routes } from './app/routes'
+import '@fontsource-variable/atkinson-hyperlegible-next'
 import './index.css'
 
 const rootElement = document.getElementById('root')

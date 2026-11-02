@@ -1,124 +1,161 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
+import { useJourney, type JourneyStep } from '../../app/useJourney'
 import { formatDate } from '../../shared/lib/formatDate'
-import { Alert } from '../../shared/ui/Alert'
+import { primaryLinkClass, secondaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
+import { PageHeader, Sheet } from '../../shared/ui/Sheet'
 import { useAuth } from '../auth/AuthContext'
 import { analysisKeys, getUsage, listAnalyses } from '../analyses/analysesApi'
-import { bandLabels } from '../analyses/analysisLabels'
+import { BandPill } from '../analyses/BandPill'
 import { jobPostingKeys, listJobPostings } from '../jobs/jobsApi'
 import { getProfile, profileQueryKey } from '../profile/profileApi'
 
 const RECENT_COUNT = 5
 
+const nextStepCopy: Record<JourneyStep | 'done', { title: string; body: string; cta: string; to: string }> = {
+  profile: {
+    title: 'Empieza por tu perfil',
+    body: 'Importa tu CV o escríbelo a mano. Es lo único que usará el análisis, así que nunca se inventa nada.',
+    cta: 'Completar mi perfil',
+    to: '/app/perfil',
+  },
+  postings: {
+    title: 'Guarda una vacante',
+    body: 'Pega el texto de una oferta que te interese, tal como la publicó la empresa.',
+    cta: 'Agregar vacante',
+    to: '/app/vacantes/nueva',
+  },
+  analysis: {
+    title: 'Analiza tu primera vacante',
+    body: 'Te mostramos qué requisitos ya demuestras, cuáles te faltan y cómo adaptar tu CV.',
+    cta: 'Analizar compatibilidad',
+    to: '/app/analisis/nuevo',
+  },
+  done: {
+    title: 'Todo listo para tu próxima postulación',
+    body: 'Guarda otra vacante o analiza una que ya tengas.',
+    cta: 'Nuevo análisis',
+    to: '/app/analisis/nuevo',
+  },
+}
+
 export function DashboardPage() {
   const { user } = useAuth()
+  const journey = useJourney()
   const profileQuery = useQuery({ queryKey: profileQueryKey, queryFn: getProfile })
   const usageQuery = useQuery({ queryKey: analysisKeys.usage, queryFn: getUsage })
   const analysesQuery = useQuery({ queryKey: analysisKeys.list(1), queryFn: () => listAnalyses(1) })
-  const lastAnalysis = analysesQuery.data?.items.find((item) => item.status === 'completed')
   const recentQuery = useQuery({
     queryKey: [...jobPostingKeys.list(1, ''), RECENT_COUNT],
     queryFn: () => listJobPostings(1, '', RECENT_COUNT),
   })
 
-  return (
-    <section aria-labelledby="page-title" className="mx-auto w-full max-w-4xl space-y-6">
-      <div>
-        <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
-          Inicio
-        </h1>
-        <p className="mt-2 text-ink-muted">Hola, {user?.displayName}. Este es el estado de tus postulaciones.</p>
-      </div>
+  const next = nextStepCopy[journey.next ?? 'done']
+  const profile = profileQuery.data
+  const recentAnalyses = (analysesQuery.data?.items ?? []).slice(0, 3)
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <article aria-labelledby="profile-card-title" className="rounded-lg border border-line bg-surface p-5">
-          <h2 id="profile-card-title" className="font-semibold">
-            Perfil profesional
+  return (
+    <div className="mx-auto w-full max-w-5xl">
+      <PageHeader title="Inicio" description={`Hola, ${user?.displayName ?? ''}. Prepara cada postulación en tres pasos.`} />
+
+      {journey.loading ? (
+        <LoadingState label="Cargando tu progreso…" />
+      ) : (
+        <section aria-labelledby="next-step-title" className="mb-8 rounded-[var(--radius-sheet)] border-2 border-pen bg-sheet p-6 md:p-8">
+          <p className="text-sm font-semibold text-pen">Tu siguiente paso</p>
+          <h2 id="next-step-title" className="mt-1 text-2xl font-bold">
+            {next.title}
           </h2>
+          <p className="mt-2 max-w-xl text-graphite">{next.body}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link to={next.to} className={`${primaryLinkClass} px-5 py-3 text-base`}>
+              {next.cta}
+            </Link>
+            {journey.next === 'profile' && (
+              <Link to="/app/vacantes/nueva" className={secondaryLinkClass}>
+                Prefiero guardar una vacante primero
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-5 lg:grid-cols-3">
+        <Sheet id="profile-card-title" title="Perfil profesional">
           {profileQuery.isPending && <LoadingState label="Cargando perfil…" />}
-          {profileQuery.isError && <Alert tone="error">No pudimos cargar tu perfil.</Alert>}
-          {profileQuery.data === null && (
+          {profile === null && (
             <>
-              <p className="mt-2 text-sm text-ink-muted">Aún no lo has creado. Es la única fuente que usará el análisis.</p>
-              <Link to="/app/perfil" className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong">
+              <p className="text-sm text-graphite">Aún no lo has creado.</p>
+              <Link to="/app/perfil" className={`${secondaryLinkClass} mt-4`}>
                 Completar mi perfil
               </Link>
             </>
           )}
-          {profileQuery.data != null && (
+          {profile != null && (
             <>
-              <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <dt className="text-ink-muted">Experiencias</dt>
-                <dd>{profileQuery.data.experiences.length}</dd>
-                <dt className="text-ink-muted">Habilidades técnicas</dt>
-                <dd>{profileQuery.data.technicalSkills.length}</dd>
-                <dt className="text-ink-muted">Actualizado</dt>
-                <dd>{formatDate(profileQuery.data.updatedAt)}</dd>
+              <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-sm">
+                <dt className="text-graphite">Experiencias</dt>
+                <dd className="font-semibold">{profile.experiences.length}</dd>
+                <dt className="text-graphite">Habilidades técnicas</dt>
+                <dd className="font-semibold">{profile.technicalSkills.length}</dd>
+                <dt className="text-graphite">Actualizado</dt>
+                <dd className="font-semibold">{formatDate(profile.updatedAt)}</dd>
               </dl>
-              <Link to="/app/perfil" className="mt-4 inline-block text-sm font-medium text-accent underline">
+              <Link to="/app/perfil" className="mt-4 inline-block text-sm font-semibold text-pen underline">
                 Editar perfil
               </Link>
             </>
           )}
-        </article>
+        </Sheet>
 
-        <article aria-labelledby="analysis-card-title" className="rounded-lg border border-line bg-surface p-5">
-          <h2 id="analysis-card-title" className="font-semibold">
-            Análisis
-          </h2>
+        <Sheet id="recent-title" title="Vacantes recientes" action={<Link to="/app/vacantes/nueva" className="text-sm font-semibold text-pen underline">Nueva vacante</Link>}>
+          {recentQuery.data?.items.length === 0 && <p className="text-sm text-graphite">Aún no has guardado vacantes.</p>}
+          {recentQuery.data !== undefined && recentQuery.data.items.length > 0 && (
+            <>
+              <ul className="divide-y divide-rule">
+                {recentQuery.data.items.map((posting) => (
+                  <li key={posting.id} className="py-2 text-sm">
+                    <Link to={`/app/vacantes/${posting.id}/editar`} className="font-semibold text-ink hover:text-pen">
+                      {posting.title}
+                    </Link>
+                    <span className="block text-graphite">{posting.company ?? 'Empresa no indicada'}</span>
+                  </li>
+                ))}
+              </ul>
+              {recentQuery.data.totalCount > RECENT_COUNT && (
+                <Link to="/app/vacantes" className="mt-3 inline-block text-sm font-semibold text-pen underline">
+                  Ver las {recentQuery.data.totalCount} vacantes
+                </Link>
+              )}
+            </>
+          )}
+        </Sheet>
+
+        <Sheet
+          id="analysis-card-title"
+          title="Análisis"
+          action={<Link to="/app/analisis/nuevo" className="text-sm font-semibold text-pen underline">Nuevo análisis</Link>}
+        >
           {usageQuery.data !== undefined && (
-            <p className="mt-2 text-sm text-ink-muted">
-              Te quedan {usageQuery.data.remaining} de {usageQuery.data.limit} análisis en las últimas {usageQuery.data.windowHours} horas.
+            <p className="text-sm text-graphite">
+              Te quedan <strong className="text-ink">{usageQuery.data.remaining}</strong> de {usageQuery.data.limit} análisis en las últimas{' '}
+              {usageQuery.data.windowHours} horas.
             </p>
           )}
-          {lastAnalysis !== undefined && lastAnalysis.scoreBand !== null && (
-            <p className="mt-2 text-sm">
-              Último:{' '}
-              <Link to={`/app/analisis/${lastAnalysis.id}`} className="font-medium text-accent underline">
-                {lastAnalysis.jobTitle}
-              </Link>{' '}
-              · {bandLabels[lastAnalysis.scoreBand]}
-            </p>
-          )}
-          <Link to="/app/analisis/nuevo" className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong">
-            Nuevo análisis
-          </Link>
-        </article>
+          {recentAnalyses.length === 0 && <p className="mt-2 text-sm text-graphite">Tus resultados aparecerán aquí.</p>}
+          <ul className="mt-3 space-y-2">
+            {recentAnalyses.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <Link to={`/app/analisis/${item.id}`} className="font-semibold text-ink hover:text-pen">
+                  {item.jobTitle}
+                </Link>
+                {item.scoreBand !== null ? <BandPill band={item.scoreBand} /> : <span className="text-xs text-redpen">No se completó</span>}
+              </li>
+            ))}
+          </ul>
+        </Sheet>
       </div>
-
-      <article aria-labelledby="recent-title" className="rounded-lg border border-line bg-surface p-5">
-        <div className="flex items-center justify-between">
-          <h2 id="recent-title" className="font-semibold">
-            Vacantes recientes
-          </h2>
-          <Link to="/app/vacantes/nueva" className="text-sm font-medium text-accent underline">
-            Nueva vacante
-          </Link>
-        </div>
-        {recentQuery.isPending && <LoadingState label="Cargando vacantes…" />}
-        {recentQuery.isError && <Alert tone="error">No pudimos cargar tus vacantes.</Alert>}
-        {recentQuery.data?.items.length === 0 && <p className="mt-3 text-sm text-ink-muted">Aún no has guardado vacantes.</p>}
-        {recentQuery.data !== undefined && recentQuery.data.items.length > 0 && (
-          <>
-            <ul className="mt-3 divide-y divide-line">
-              {recentQuery.data.items.map((posting) => (
-                <li key={posting.id} className="flex items-center justify-between py-2 text-sm">
-                  <Link to={`/app/vacantes/${posting.id}/editar`} className="font-medium hover:underline">
-                    {posting.title}
-                  </Link>
-                  <span className="text-ink-muted">{posting.company ?? 'Empresa no indicada'}</span>
-                </li>
-              ))}
-            </ul>
-            {recentQuery.data.totalCount > RECENT_COUNT && (
-              <Link to="/app/vacantes" className="mt-3 inline-block text-sm font-medium text-accent underline">
-                Ver las {recentQuery.data.totalCount} vacantes
-              </Link>
-            )}
-          </>
-        )}
-      </article>
-    </section>
+    </div>
   )
 }

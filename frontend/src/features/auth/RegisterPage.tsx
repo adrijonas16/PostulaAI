@@ -34,10 +34,10 @@ export function RegisterPage() {
 
   return (
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-sm">
-      <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
+      <h1 id="page-title" className="text-3xl font-bold">
         Crear cuenta
       </h1>
-      <p className="mt-2 text-sm text-ink-muted">Regístrate con tu correo para empezar a analizar vacantes.</p>
+      <p className="mt-2 text-sm text-graphite">Regístrate con tu correo para empezar a analizar vacantes.</p>
 
       <form noValidate onSubmit={onSubmit} className="mt-8 space-y-4">
         {formError !== null && <Alert tone="error">{formError}</Alert>}
@@ -56,14 +56,14 @@ export function RegisterPage() {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
         </Button>
-        <p className="text-xs text-ink-muted">
+        <p className="text-xs text-graphite">
           Al crear tu cuenta aceptas que tu perfil se procese para generar los análisis que solicites. No usamos tus datos para entrenar modelos.
         </p>
       </form>
 
-      <p className="mt-6 text-sm text-ink-muted">
+      <p className="mt-6 text-sm text-graphite">
         ¿Ya tienes cuenta?{' '}
-        <Link to="/iniciar-sesion" className="font-medium text-accent underline">
+        <Link to="/iniciar-sesion" className="font-semibold text-pen underline">
           Iniciar sesión
         </Link>
       </p>

@@ -11,11 +11,11 @@ interface PagePlaceholderProps {
 export function PagePlaceholder({ title, description, phase, children }: PagePlaceholderProps) {
   return (
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-3xl">
-      <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
+      <h1 id="page-title" className="text-3xl font-bold">
         {title}
       </h1>
-      <p className="mt-2 text-ink-muted">{description}</p>
-      <p className="mt-6 rounded-lg border border-dashed border-line bg-surface p-4 text-sm text-ink-muted">
+      <p className="mt-2 text-graphite">{description}</p>
+      <p className="mt-6 rounded-[var(--radius-sheet)] border-2 border-dashed border-rule bg-sheet p-4 text-sm text-graphite">
         Pantalla en construcción. Disponible a partir de la Fase {phase}.
       </p>
       {children}

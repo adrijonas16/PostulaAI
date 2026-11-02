@@ -1,14 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ApiError } from '../../shared/api/ApiError'
 import type { AnalysisResponse, JobAnalysisResult, ScoreContext } from '../../shared/api/types'
 import { formatDate } from '../../shared/lib/formatDate'
 import { Alert } from '../../shared/ui/Alert'
+import { primaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
 import { analysisKeys, getAnalysis } from './analysesApi'
-import { analysisErrorMessage, bandLabels, bandStyles, gapTypeLabels, importanceLabels } from './analysisLabels'
+import { analysisErrorMessage, bandLabels } from './analysisLabels'
 import { CopyButton } from './CopyButton'
+import { EditableDraft } from './EditableDraft'
+import { MatchBar, MatchLegend } from './MatchBar'
+import { RequirementMap } from './RequirementMap'
 
 export function AnalysisResultPage() {
   const { analysisId = '' } = useParams()
@@ -22,10 +26,10 @@ export function AnalysisResultPage() {
     const notFound = query.error instanceof ApiError && query.error.status === 404
     return (
       <section className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-semibold tracking-tight">Resultado del análisis</h1>
+        <h1 className="text-3xl font-bold">Resultado del análisis</h1>
         <div className="mt-6 space-y-3">
           <Alert tone="error">{notFound ? 'No encontramos ese análisis.' : 'No pudimos cargar el análisis. Intenta de nuevo.'}</Alert>
-          <Link to="/app/analisis" className="text-sm font-medium text-accent underline">
+          <Link to="/app/analisis" className="text-sm font-semibold text-pen underline">
             Ver mi historial
           </Link>
         </div>
@@ -37,13 +41,11 @@ export function AnalysisResultPage() {
   return (
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-4xl space-y-6">
       <header>
-        <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
-          Resultado del análisis
-        </h1>
-        <p className="mt-2 text-ink-muted">
+        <p className="text-sm text-graphite">Análisis del {formatDate(analysis.createdAt)}</p>
+        <h1 id="page-title" className="mt-1 text-3xl font-bold leading-tight">
           {analysis.jobTitle}
-          {analysis.jobCompany !== null && ` · ${analysis.jobCompany}`} · {formatDate(analysis.createdAt)}
-        </p>
+        </h1>
+        {analysis.jobCompany !== null && <p className="mt-1 text-lg text-graphite">{analysis.jobCompany}</p>}
       </header>
 
       {analysis.result === null || analysis.score === null ? (
@@ -52,8 +54,8 @@ export function AnalysisResultPage() {
         <AnalysisBody result={analysis.result} score={analysis.score} />
       )}
 
-      <details className="rounded-lg border border-line bg-surface p-4 text-sm text-ink-muted">
-        <summary className="cursor-pointer font-medium text-ink">Detalles técnicos</summary>
+      <details className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-4 text-sm text-graphite">
+        <summary className="cursor-pointer font-semibold text-ink">Detalles técnicos</summary>
         <dl className="mt-3 grid gap-2 sm:grid-cols-[12rem_1fr]">
           <dt>Modelo</dt>
           <dd>{analysis.model}</dd>
@@ -71,10 +73,10 @@ export function AnalysisResultPage() {
 
 function FailedAnalysis({ analysis }: { analysis: AnalysisResponse }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <Alert tone="error">{analysisErrorMessage(analysis.errorCode)}</Alert>
       {analysis.jobPostingId !== null && (
-        <Link to={`/app/analisis/nuevo?vacante=${analysis.jobPostingId}`} className="inline-block text-sm font-medium text-accent underline">
+        <Link to={`/app/analisis/nuevo?vacante=${analysis.jobPostingId}`} className={primaryLinkClass}>
           Intentar de nuevo
         </Link>
       )}
@@ -82,136 +84,118 @@ function FailedAnalysis({ analysis }: { analysis: AnalysisResponse }) {
   )
 }
 
-function Section({ id, title, children, action }: { id: string; title: string; children: ReactNode; action?: ReactNode }) {
+function Verdict({ result, score }: { result: JobAnalysisResult; score: ScoreContext }) {
+  const required = score.requiredMet + score.requiredMissing
+  const preferred = score.preferredMet + score.preferredMissing
   return (
-    <section aria-labelledby={id} className="rounded-lg border border-line bg-surface p-5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={id} className="text-lg font-semibold">
-          {title}
-        </h2>
-        {action}
+    <section aria-labelledby="score-title" className="rounded-[var(--radius-sheet)] border-2 border-ink bg-sheet p-5 md:p-7">
+      <h2 id="score-title" className="text-2xl font-bold">
+        {bandLabels[score.band]}
+      </h2>
+      <p className="mt-2 text-lg">
+        Cumples <strong className="marker">{score.requiredMet} de {required}</strong> requisitos obligatorios
+        {preferred > 0 && (
+          <>
+            {' '}
+            y <strong>{score.preferredMet} de {preferred}</strong> deseables
+          </>
+        )}
+        .
+      </p>
+      <div className="mt-5">
+        <MatchBar score={score} />
+        <MatchLegend />
       </div>
-      <div className="mt-3">{children}</div>
+      <p className="mt-5 text-sm text-graphite">
+        Puntaje estimado: <strong className="text-ink">{result.compatibilityScore}/100</strong>. Es una estimación de la IA, no una medida de tu valor
+        profesional.
+      </p>
+      <p className="mt-4 max-w-2xl leading-relaxed">{result.summary}</p>
     </section>
   )
 }
 
-function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'strong' }) {
+function CvChecklist({ items }: { items: string[] }) {
+  const [done, setDone] = useState<ReadonlySet<number>>(new Set())
+  const toggle = (index: number) =>
+    setDone((current) => {
+      const next = new Set(current)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
+      return next
+    })
+
   return (
-    <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${tone === 'strong' ? 'bg-ink text-white' : 'bg-canvas text-ink-muted'}`}
-    >
-      {children}
-    </span>
+    <section aria-labelledby="cv-title" className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5 md:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="cv-title" className="text-lg font-bold">
+          Ajustes para tu CV
+        </h2>
+        <p className="text-sm text-graphite" aria-live="polite">
+          {done.size} de {items.length} hechos
+        </p>
+      </div>
+      <ul className="mt-3 space-y-1">
+        {items.map((item, index) => (
+          <li key={item}>
+            <label className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-field)] p-2 hover:bg-paper">
+              <input type="checkbox" checked={done.has(index)} onChange={() => toggle(index)} className="mt-1 size-4 shrink-0 accent-pen" />
+              <span className={done.has(index) ? 'text-graphite line-through' : ''}>{item}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
 function AnalysisBody({ result, score }: { result: JobAnalysisResult; score: ScoreContext }) {
   return (
     <>
-      <section aria-labelledby="score-title" className={`rounded-lg border p-5 ${bandStyles[score.band]}`}>
-        <h2 id="score-title" className="text-xl font-semibold">
-          {bandLabels[score.band]}
-        </h2>
-        <p className="mt-1 text-sm">
-          Puntaje estimado: <strong>{result.compatibilityScore}/100</strong>. Es una estimación de la IA, no una medida de tu valor profesional.
-        </p>
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-          <div className="rounded-md bg-white/70 p-3">
-            <dt className="font-medium">Requisitos obligatorios</dt>
-            <dd>
-              {score.requiredMet} cumplidos · {score.requiredMissing} por trabajar
-            </dd>
-          </div>
-          <div className="rounded-md bg-white/70 p-3">
-            <dt className="font-medium">Requisitos deseables</dt>
-            <dd>
-              {score.preferredMet} cumplidos · {score.preferredMissing} por trabajar
-            </dd>
-          </div>
-        </dl>
-        <p className="mt-4 text-sm">{result.summary}</p>
-      </section>
-
-      <Section id="strengths-title" title="Fortalezas respaldadas por tu perfil">
-        {result.strengths.length === 0 ? (
-          <p className="text-sm text-ink-muted">No encontramos requisitos claramente cumplidos con la información de tu perfil.</p>
-        ) : (
-          <ul className="space-y-3">
-            {result.strengths.map((strength) => (
-              <li key={`${strength.requirement}-${strength.evidence}`} className="border-l-2 border-emerald-400 pl-3">
-                <p className="font-medium">
-                  {strength.requirement} <Badge tone={strength.importance === 'required' ? 'strong' : 'neutral'}>{importanceLabels[strength.importance]}</Badge>
-                </p>
-                <p className="mt-1 text-sm text-ink-muted">Evidencia en tu perfil: {strength.evidence}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section id="gaps-title" title="Brechas y cómo abordarlas">
-        {result.gaps.length === 0 ? (
-          <p className="text-sm text-ink-muted">No se identificaron brechas.</p>
-        ) : (
-          <ul className="space-y-3">
-            {result.gaps.map((gap) => (
-              <li key={`${gap.requirement}-${gap.gapType}`} className="border-l-2 border-rose-300 pl-3">
-                <p className="font-medium">
-                  {gap.requirement} <Badge tone={gap.importance === 'required' ? 'strong' : 'neutral'}>{importanceLabels[gap.importance]}</Badge>{' '}
-                  <Badge>{gapTypeLabels[gap.gapType]}</Badge>
-                </p>
-                <p className="mt-1 text-sm text-ink-muted">{gap.recommendation}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+      <Verdict result={result} score={score} />
+      <RequirementMap result={result} />
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Section id="keywords-title" title="Palabras clave para tu CV">
-          <p className="mb-3 text-xs text-ink-muted">Solo términos que tu perfil respalda.</p>
-          <ul aria-label="Palabras clave" className="flex flex-wrap gap-2">
+        <CvChecklist items={result.cvRecommendations} />
+
+        <section aria-labelledby="keywords-title" className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5 md:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="keywords-title" className="text-lg font-bold">
+              Palabras clave para tu CV
+            </h2>
+            {result.keywordsToInclude.length > 0 && <CopyButton text={result.keywordsToInclude.join(', ')} label="Copiar palabras clave" />}
+          </div>
+          <p className="mt-1 text-sm text-graphite">Solo términos que tu perfil respalda. Úsalos tal cual aparecen en la vacante.</p>
+          <ul aria-label="Palabras clave" className="mt-3 flex flex-wrap gap-2">
             {result.keywordsToInclude.map((keyword) => (
-              <li key={keyword} className="rounded-full border border-line bg-canvas px-3 py-1 text-sm">
+              <li key={keyword} className="rounded-[var(--radius-field)] bg-marker-soft px-2.5 py-1 text-sm font-semibold">
                 {keyword}
               </li>
             ))}
           </ul>
-        </Section>
-
-        <Section id="cv-title" title="Recomendaciones para tu CV">
-          <ol className="list-decimal space-y-2 pl-5 text-sm">
-            {result.cvRecommendations.map((recommendation) => (
-              <li key={recommendation}>{recommendation}</li>
-            ))}
-          </ol>
-        </Section>
+        </section>
       </div>
 
-      <Section
+      <EditableDraft
         id="summary-title"
         title="Resumen profesional adaptado"
-        action={<CopyButton text={result.adaptedProfessionalSummary} label="Copiar resumen profesional" />}
-      >
-        <p className="whitespace-pre-line text-sm leading-relaxed">{result.adaptedProfessionalSummary}</p>
-      </Section>
-
-      <Section
+        original={result.adaptedProfessionalSummary}
+        copyLabel="Copiar resumen profesional"
+      />
+      <EditableDraft
         id="letter-title"
         title="Borrador de carta de presentación"
-        action={<CopyButton text={result.coverLetterDraft} label="Copiar carta de presentación" />}
-      >
-        <p className="whitespace-pre-line text-sm leading-relaxed">{result.coverLetterDraft}</p>
-        <p className="mt-3 text-xs text-ink-muted">Revísala y personalízala antes de enviarla.</p>
-      </Section>
+        original={result.coverLetterDraft}
+        copyLabel="Copiar carta de presentación"
+        hint="Personalízala antes de enviarla."
+      />
 
-      <aside aria-labelledby="disclaimer-title" className="rounded-lg bg-accent-soft p-5 text-sm">
-        <h2 id="disclaimer-title" className="font-semibold text-accent-strong">
+      <aside aria-labelledby="disclaimer-title" className="rounded-[var(--radius-sheet)] bg-pen-soft p-5 text-sm">
+        <h2 id="disclaimer-title" className="font-bold text-pen-strong">
           Aviso de transparencia
         </h2>
         <p className="mt-2">{result.disclaimer}</p>
-        <p className="mt-2 text-ink-muted">
+        <p className="mt-2 text-graphite">
           PostulaAI solo usa la información de tu perfil y no agrega experiencia que no tengas. Revisa siempre el contenido antes de usarlo.
         </p>
       </aside>

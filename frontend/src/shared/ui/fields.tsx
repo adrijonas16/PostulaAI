@@ -1,7 +1,7 @@
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 
 const controlClass =
-  'mt-1 block w-full rounded-md border bg-surface px-3 py-2 text-sm text-ink shadow-sm placeholder:text-ink-muted/70 focus:border-accent'
+  'mt-1.5 block w-full rounded-[var(--radius-field)] border bg-sheet px-3 py-2 text-[0.95rem] text-ink placeholder:text-graphite/70 focus:border-pen focus:outline-none focus:ring-2 focus:ring-pen-soft disabled:bg-paper disabled:text-graphite'
 
 interface FieldShellProps {
   id: string
@@ -15,10 +15,10 @@ interface FieldShellProps {
 function FieldShell({ id, label, hint, error, required, children }: FieldShellProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
+      <label htmlFor={id} className="block text-sm font-semibold text-ink">
         {label}
         {required === true && (
-          <span className="text-red-700" aria-hidden="true">
+          <span className="text-redpen" aria-hidden="true">
             {' '}
             *
           </span>
@@ -26,12 +26,12 @@ function FieldShell({ id, label, hint, error, required, children }: FieldShellPr
       </label>
       {children}
       {hint !== undefined && error === undefined && (
-        <p id={`${id}-hint`} className="mt-1 text-xs text-ink-muted">
+        <p id={`${id}-hint`} className="mt-1 text-xs text-graphite">
           {hint}
         </p>
       )}
       {error !== undefined && (
-        <p id={`${id}-error`} className="mt-1 text-xs text-red-700">
+        <p id={`${id}-error`} className="mt-1 text-xs text-redpen">
           {error}
         </p>
       )}
@@ -60,7 +60,7 @@ export function TextField({ label, hint, error, required, ...props }: CommonProp
         aria-invalid={error !== undefined}
         aria-describedby={describedBy(id, hint, error)}
         aria-required={required}
-        className={`${controlClass} ${error !== undefined ? 'border-red-400' : 'border-line'}`}
+        className={`${controlClass} ${error !== undefined ? 'border-redpen bg-redpen-soft/40' : 'border-rule'}`}
         {...props}
       />
     </FieldShell>
@@ -77,7 +77,7 @@ export function TextAreaField({ label, hint, error, required, ...props }: Common
         aria-invalid={error !== undefined}
         aria-describedby={describedBy(id, hint, error)}
         aria-required={required}
-        className={`${controlClass} ${error !== undefined ? 'border-red-400' : 'border-line'}`}
+        className={`${controlClass} ${error !== undefined ? 'border-redpen bg-redpen-soft/40' : 'border-rule'}`}
         {...props}
       />
     </FieldShell>
@@ -96,7 +96,7 @@ export function SelectField({ label, hint, error, required, options, ...props }:
         id={id}
         aria-invalid={error !== undefined}
         aria-describedby={describedBy(id, hint, error)}
-        className={`${controlClass} ${error !== undefined ? 'border-red-400' : 'border-line'}`}
+        className={`${controlClass} ${error !== undefined ? 'border-redpen bg-redpen-soft/40' : 'border-rule'}`}
         {...props}
       >
         {options.map((option) => (
@@ -113,7 +113,7 @@ export function CheckboxField({ label, ...props }: { label: string } & InputHTML
   const id = useId()
   return (
     <div className="flex items-center gap-2">
-      <input id={id} type="checkbox" className="size-4 rounded border-line accent-accent" {...props} />
+      <input id={id} type="checkbox" className="size-4 rounded border-rule accent-pen" {...props} />
       <label htmlFor={id} className="text-sm text-ink">
         {label}
       </label>

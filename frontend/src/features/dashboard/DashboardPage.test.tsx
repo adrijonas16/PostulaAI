@@ -10,7 +10,8 @@ describe('DashboardPage', () => {
     withAuthenticatedSession()
     renderApp('/app')
 
-    expect(await screen.findByRole('link', { name: /completar mi perfil/i })).toHaveAttribute('href', '/app/perfil')
+    const nextStep = await screen.findByRole('region', { name: 'Empieza por tu perfil' })
+    expect(within(nextStep).getByRole('link', { name: 'Completar mi perfil' })).toHaveAttribute('href', '/app/perfil')
     expect(await screen.findByText(/aún no has guardado vacantes/i)).toBeInTheDocument()
   })
 
@@ -28,8 +29,10 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Empresa no indicada')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /ver las 8 vacantes/i })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /editar perfil/i })).toBeInTheDocument()
-    expect(await screen.findByText(/te quedan 10 de 10 análisis/i)).toBeInTheDocument()
-    const analysisCard = screen.getByRole('article', { name: 'Análisis' })
+    // Profile and postings exist, so the next step is the first analysis.
+    expect(await screen.findByRole('region', { name: 'Analiza tu primera vacante' })).toBeInTheDocument()
+    const analysisCard = screen.getByRole('region', { name: 'Análisis' })
+    expect(await within(analysisCard).findByText(/te quedan/i)).toHaveTextContent('Te quedan 10 de 10 análisis')
     expect(within(analysisCard).getByRole('link', { name: 'Nuevo análisis' })).toHaveAttribute('href', '/app/analisis/nuevo')
   })
 })
