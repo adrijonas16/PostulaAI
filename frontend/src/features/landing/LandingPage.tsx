@@ -21,7 +21,7 @@ export function LandingPage() {
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-graphite">
             PostulaAI revisa la oferta requisito por requisito y lo marca como lo harías tú con un resaltador: lo que ya demuestras en
-            amarillo, lo que te falta en rojo.
+            verde, lo que te falta en rojo.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link to="/registro" className={`${primaryLinkClass} px-6 py-3 text-base`}>
