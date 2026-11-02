@@ -1,6 +1,6 @@
 # Sistema de IA
 
-> Estado: **diseño (Fase 0)**. La implementación llega en la Fase 3. Nada de lo descrito aquí como flujo está implementado todavía, salvo el contrato preliminar `IAIClient`.
+> Estado: **implementado (Fase 3)**. Cubierto por pruebas unitarias e de integración con un cliente de IA falso. **La calidad del prompt con el modelo real todavía no se ha medido**; eso es la Fase 5 (evaluaciones).
 
 ## Principio rector
 
@@ -60,11 +60,39 @@ Perfil + vacante
 
 Estado, `PromptId`, `PromptVersion`, modelo, idioma, latencia, tokens de entrada y salida, `RepairAttempted`, `ErrorCode`, snapshots de perfil y vacante y `ResultJson` (solo si es válido). **Nunca** se guarda ni se registra la API key. Prompts y respuestas completas no se escriben en logs.
 
+## Implementación
+
+| Pieza | Archivo |
+|---|---|
+| Prompt principal y de reparación (recursos embebidos, inmutables) | `PostulaAI.AI/Prompts/job-analysis-v1.txt`, `job-analysis-repair-v1.txt` |
+| Esquema enviado como salida estructurada | `PostulaAI.AI/Schemas/job-analysis-v1.schema.json` |
+| Plantillas `{{variable}}` en una sola pasada (los datos del usuario no pueden inyectar marcadores) | `Prompts/PromptTemplate.cs` |
+| Validación de esquema: deserialización estricta (rechaza propiedades desconocidas, faltantes, `null` y enums inválidos) | `Services/JobAnalysisJson.cs` |
+| Reglas de negocio (rangos, textos vacíos, límites, duplicados) | `Services/JobAnalysisRules.cs` |
+| Verificación contra invención (vocabulario curado de ~90 tecnologías, herramientas, certificaciones e idiomas, con alias y equivalencias como PostgreSQL ⇒ SQL) | `Evaluations/TechVocabulary.cs`, `Evaluations/GroundingChecker.cs` |
+| Orquestación con un único intento de reparación | `Services/JobAnalysisService.cs` |
+| Cliente de la API Messages de Claude (`output_config.format` = `json_schema`), reintentos acotados | `Clients/ClaudeClient.cs` |
+| Persistencia, snapshots, límites de uso y mapeo de errores | `PostulaAI.Api/Modules/Analyses`, `Modules/UsageLimits` |
+
+Configuración: `Anthropic:ApiKey` (secreto), `Anthropic:Model` (por defecto `claude-sonnet-5-5`), `AI:JobAnalysis:PromptVersion` (por defecto `v1`), `AI:JobAnalysis:MaxOutputTokens` (16 000, incluye margen para el razonamiento adaptativo del modelo).
+
+La verificación contra invención revisa la evidencia de cada fortaleza, el resumen adaptado y las palabras clave. Si encuentra un término que no está en el perfil, pide una reparación indicando el término exacto. Si persiste, el análisis falla con `ai_invalid_output` y no se guarda.
+
+### Códigos de error
+
+| Código | HTTP | Significado |
+|---|---|---|
+| `ai_not_configured` | 503 | Falta `ANTHROPIC_API_KEY` o fue rechazada. No consume uso. |
+| `ai_rate_limited` | 503 | 429/529 persistentes tras los reintentos. |
+| `ai_unavailable` | 503 | Error de red o 5xx persistente. |
+| `ai_invalid_output` | 502 | El resultado no pasó la validación ni tras la reparación. |
+| `ai_refused` / `ai_request_rejected` | 422 | El modelo se negó o la API rechazó la solicitud. |
+
 ## Abstracción del proveedor
 
 `IAIClient` (en `PostulaAI.AI/Clients`) recibe un prompt de sistema, mensajes y un máximo de tokens, y devuelve contenido, modelo, tokens, latencia y motivo de parada. La lógica de producto no conoce a Claude. Cambiar de proveedor implica una nueva implementación de `IAIClient` y volver a ejecutar las evaluaciones.
 
-El identificador del modelo y la forma exacta de solicitar salida estructurada se configuran y verifican contra la documentación vigente de la API de Claude al implementar la Fase 3. No quedan fijos en el código.
+El modelo se configura con `Anthropic:Model`. La salida estructurada usa `output_config.format`, según la documentación vigente de la API de Claude (fuera de beta desde enero de 2026).
 
 ## Riesgos y mitigaciones
 
