@@ -2,7 +2,7 @@
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 0 | Estructura del monorepo, reglas, skills, documentación, esqueletos de backend y frontend, Docker Compose, CI | ✅ Implementada. Backend verificado solo en CI (ver README) |
+| 0 | Estructura del monorepo, reglas, skills, documentación, esqueletos de backend y frontend, Docker Compose, CI | ✅ Implementada. CI en verde: backend compilado sin advertencias, 5 pruebas de backend y 13 de frontend, sin paquetes vulnerables |
 | 1 | Autenticación (registro, login, refresh rotado, logout), usuarios, perfil profesional, auditoría básica | Pendiente |
 | 2 | Vacantes (CRUD), historial, dashboard | Pendiente |
 | 3 | `ClaudeClient`, prompts v1, esquema, validación, reparación, límites de uso, endpoint de análisis | Pendiente |

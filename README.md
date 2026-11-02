@@ -127,6 +127,8 @@ Nunca se commitean valores reales. Ver [docs/security.md](docs/security.md).
 
 ## Pruebas
 
+[![CI](https://github.com/adrijonas16/PostulaAI/actions/workflows/ci.yml/badge.svg)](https://github.com/adrijonas16/PostulaAI/actions/workflows/ci.yml)
+
 ```bash
 dotnet test backend/PostulaAI.slnx
 
@@ -157,7 +159,7 @@ Aún no hay despliegue público (Fase 6).
 ## Limitaciones conocidas
 
 - **Fase 0:** solo existen la estructura, los endpoints de salud y las pantallas de marcador de posición. No hay autenticación ni análisis.
-- **El backend no se compiló en el entorno donde se creó la Fase 0** (sin acceso al SDK de .NET). Su compilación y sus pruebas se verifican en GitHub Actions.
+- El backend se compila y se prueba en GitHub Actions; el entorno donde se creó la Fase 0 no tenía el SDK de .NET.
 - El análisis no verifica la veracidad del perfil: toma como cierto lo que el usuario escribe.
 - Solo entrada manual de texto. No hay carga de PDF.
 - El puntaje es una estimación no calibrada contra resultados reales de contratación.
