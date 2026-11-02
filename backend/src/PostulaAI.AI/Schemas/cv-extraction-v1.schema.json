@@ -1,0 +1,97 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fullName", "headline", "summary", "links", "experiences", "education", "projects", "certifications", "technicalSkills", "softSkills", "languages"],
+  "properties": {
+    "fullName": { "type": "string" },
+    "headline": { "type": ["string", "null"] },
+    "summary": { "type": ["string", "null"] },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["linkedInUrl", "gitHubUrl", "portfolioUrl"],
+      "properties": {
+        "linkedInUrl": { "type": ["string", "null"] },
+        "gitHubUrl": { "type": ["string", "null"] },
+        "portfolioUrl": { "type": ["string", "null"] }
+      }
+    },
+    "experiences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["company", "role", "location", "startDate", "endDate", "isCurrent", "description", "achievements", "technologies"],
+        "properties": {
+          "company": { "type": "string" },
+          "role": { "type": "string" },
+          "location": { "type": ["string", "null"] },
+          "startDate": { "type": ["string", "null"] },
+          "endDate": { "type": ["string", "null"] },
+          "isCurrent": { "type": "boolean" },
+          "description": { "type": ["string", "null"] },
+          "achievements": { "type": "array", "items": { "type": "string" } },
+          "technologies": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["institution", "degree", "fieldOfStudy", "startDate", "endDate", "status"],
+        "properties": {
+          "institution": { "type": "string" },
+          "degree": { "type": "string" },
+          "fieldOfStudy": { "type": ["string", "null"] },
+          "startDate": { "type": ["string", "null"] },
+          "endDate": { "type": ["string", "null"] },
+          "status": { "type": "string", "enum": ["completed", "in_progress", "incomplete"] }
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description", "technologies", "url"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "technologies": { "type": "array", "items": { "type": "string" } },
+          "url": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "issuer", "issuedOn", "credentialUrl"],
+        "properties": {
+          "name": { "type": "string" },
+          "issuer": { "type": "string" },
+          "issuedOn": { "type": ["string", "null"] },
+          "credentialUrl": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "technicalSkills": { "type": "array", "items": { "type": "string" } },
+    "softSkills": { "type": "array", "items": { "type": "string" } },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["language", "proficiency"],
+        "properties": {
+          "language": { "type": "string" },
+          "proficiency": { "type": ["string", "null"], "enum": ["basic", "intermediate", "advanced", "native", null] }
+        }
+      }
+    }
+  }
+}

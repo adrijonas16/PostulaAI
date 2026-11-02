@@ -1,0 +1,6 @@
+=== USER ===
+Your previous answer cannot be accepted because it failed these validation checks:
+
+{{validation_errors}}
+
+Return the complete corrected JSON object again, following the same schema and all the original rules. Copy only information present in the CV text; use null or empty arrays when a value is not present.
