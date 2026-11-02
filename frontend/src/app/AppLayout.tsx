@@ -7,7 +7,7 @@ import { Logo } from '../shared/ui/Logo'
 const navigation = [
   { to: '/app', label: 'Inicio', end: true },
   { to: '/app/perfil', label: 'Perfil profesional', end: false },
-  { to: '/app/vacantes/nueva', label: 'Nueva vacante', end: false },
+  { to: '/app/vacantes', label: 'Vacantes', end: false },
   { to: '/app/analisis/nuevo', label: 'Nuevo análisis', end: true },
   { to: '/app/analisis', label: 'Historial', end: true },
   { to: '/app/configuracion', label: 'Configuración', end: false },

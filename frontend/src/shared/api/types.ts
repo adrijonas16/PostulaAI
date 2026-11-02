@@ -94,3 +94,38 @@ export interface ProfileResponse extends ProfileRequest {
   id: string
   updatedAt: string
 }
+
+export const workModes = ['unspecified', 'onsite', 'hybrid', 'remote'] as const
+export type WorkMode = (typeof workModes)[number]
+
+export interface JobPostingRequest {
+  title: string
+  company: string | null
+  location: string | null
+  workMode: WorkMode
+  description: string
+  sourceUrl: string | null
+}
+
+export interface JobPostingResponse extends JobPostingRequest {
+  id: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface JobPostingSummary {
+  id: string
+  title: string
+  company: string | null
+  location: string | null
+  workMode: WorkMode
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PagedResponse<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  totalCount: number
+}
