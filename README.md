@@ -95,6 +95,18 @@ Luego abre http://localhost:5173. Para detenerlo: `docker compose down`.
 
 El script comprueba antes que los puertos estén libres y te dice qué programa los ocupa. Puertos por defecto en tu equipo: app `5173`, API `58080`, PostgreSQL `55432` (elegido para no chocar con un PostgreSQL instalado localmente en `5432`). Se cambian en `.env` con `WEB_HOST_PORT`, `API_HOST_PORT` y `POSTGRES_HOST_PORT`.
 
+### Modo recarga automática (para desarrollar)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1 -Watch
+```
+
+```bash
+./scripts/dev-up.sh --watch
+```
+
+Usa `docker-compose.watch.yml`: la API corre con `dotnet watch` y el frontend con el servidor de Vite, ambos directamente desde las carpetas del repositorio. Al editar código o hacer `git pull`, la página se actualiza sola y la API se reinicia sola en unos segundos, sin reconstruir imágenes. Las migraciones nuevas se aplican al reiniciarse la API. La primera vez tarda más porque descarga dependencias y compila dentro del contenedor. Usa los mismos puertos y la misma base de datos que el modo normal.
+
 ### Configuración manual
 
 ```bash

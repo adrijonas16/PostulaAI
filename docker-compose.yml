@@ -1,6 +1,9 @@
 # Local stack: PostgreSQL + API + frontend.
 # Requires a .env file (copy .env.example). No real secrets belong in this file.
 # Host ports are configurable (POSTGRES_HOST_PORT, API_HOST_PORT, WEB_HOST_PORT) to avoid clashes with local services.
+# For automatic reload while developing, use docker-compose.watch.yml (scripts\dev-up.ps1 -Watch).
+name: postulaai
+
 services:
   postgres:
     image: postgres:16-alpine

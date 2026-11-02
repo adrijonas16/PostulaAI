@@ -1,0 +1,71 @@
+# Local stack with automatic reload: runs the API with `dotnet watch` and the frontend with the Vite
+# dev server, both straight from the source folders. Any change to the code (an edit or a `git pull`)
+# shows up without rebuilding images. Same project, ports and database volume as docker-compose.yml.
+# Usage: scripts\dev-up.ps1 -Watch   (or ./scripts/dev-up.sh --watch)
+name: postulaai
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postulaai}
+      POSTGRES_USER: ${POSTGRES_USER:-postulaai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src
+    command: ["dotnet", "watch", "--project", "src/PostulaAI.Api", "--non-interactive", "run", "--no-launch-profile"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      # File change notifications do not cross from a Windows/macOS host into the container; poll instead.
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=${POSTGRES_DB:-postulaai};Username=${POSTGRES_USER:-postulaai};Password=${POSTGRES_PASSWORD}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in .env (at least 32 random bytes)}
+      Anthropic__ApiKey: ${ANTHROPIC_API_KEY:-}
+      Anthropic__Model: ${ANTHROPIC_MODEL:-}
+    volumes:
+      - ./backend:/src
+      # Build output stays inside the container so it never mixes with a host build.
+      - /src/src/PostulaAI.Api/bin
+      - /src/src/PostulaAI.Api/obj
+      - /src/src/PostulaAI.AI/bin
+      - /src/src/PostulaAI.AI/obj
+      - nuget-cache:/root/.nuget/packages
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${API_HOST_PORT:-58080}:8080"
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: ["sh", "-c", "npm ci --no-audit --no-fund && npx vite --host 0.0.0.0 --port 5173 --strictPort"]
+    environment:
+      VITE_API_PROXY_TARGET: http://api:8080
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      # Linux dependencies live in the container, not in the host folder.
+      - /app/node_modules
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${WEB_HOST_PORT:-5173}:5173"
+
+volumes:
+  postgres-data:
+  nuget-cache:
