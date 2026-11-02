@@ -27,7 +27,7 @@
 
 - ✅ Cada recurso pertenece a un `UserId`. Los servicios reciben el `UserId` del token y filtran por él.
 - ✅ El perfil solo es accesible por `/profiles/me`: no existe ruta para leer el de otro usuario. Una prueba de integración A/B lo verifica.
-- ✅ Vacantes: toda consulta filtra por `UserId` y `Id` a la vez; una vacante ajena responde `404` en GET, PUT y DELETE y nunca aparece en el listado (prueba de integración A/B).
+- ✅ Vacantes: toda consulta filtra por `UserId` y `Id` a la vez; una vacante ajena responde `404` en GET, PUT, DELETE y `PUT /application`, y nunca aparece en el listado (pruebas de integración A/B).
 - ✅ La búsqueda escapa los comodines de `LIKE`, así que el texto del usuario se compara literalmente.
 - ✅ Análisis: misma regla, con prueba de integración A/B. Crear un análisis exige que la vacante sea del usuario.
 
@@ -38,6 +38,7 @@
 | Correo, nombre | `User` | Necesario para la cuenta |
 | Perfil profesional completo | `ProfessionalProfile` y tablas hijas | Lo escribe el usuario |
 | Vacantes | `JobPosting` | Texto pegado por el usuario |
+| Postulaciones | `JobPosting.ApplicationStatus`, `AppliedOn`, `ApplicationNotes`, `SubmittedSummary`, `SubmittedCoverLetter` | Lo que el usuario registra sobre su postulación, incluidos los textos que envió. Se borra con la vacante. |
 | Snapshots | `Analysis.ProfileSnapshot`, `Analysis.JobPostingSnapshot` | Copia del perfil y la vacante al momento del análisis |
 | Resultados de IA | `Analysis.ResultJson` | Derivado del perfil |
 

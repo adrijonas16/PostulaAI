@@ -1,13 +1,23 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
-import type { JobPostingSummary } from '../../shared/api/types'
+import { applicationStatuses, type ApplicationStatus, type JobPostingSummary } from '../../shared/api/types'
 import { formatDate } from '../../shared/lib/formatDate'
 import { Alert } from '../../shared/ui/Alert'
 import { Button, primaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
+import { applicationStatusLabels, formatDay, todayIso } from './applicationLabels'
+import { ApplicationStatusPill } from './ApplicationStatusPill'
 import { workModeLabels } from './jobPostingForm'
-import { deleteJobPosting, JOB_POSTINGS_PAGE_SIZE, jobPostingKeys, listJobPostings } from './jobsApi'
+import { deleteJobPosting, getJobPosting, JOB_POSTINGS_PAGE_SIZE, jobPostingKeys, listJobPostings, updateApplication } from './jobsApi'
+
+const isStatus = (value: string | null): value is ApplicationStatus => applicationStatuses.some((status) => status === value)
+
+/** Marks a posting as applied today, keeping whatever notes and texts were already recorded. */
+async function markApplied(id: string) {
+  const posting = await getJobPosting(id)
+  return updateApplication(id, { ...posting.application, status: 'applied', appliedOn: posting.application.appliedOn ?? todayIso() })
+}
 
 function noticeFrom(state: unknown): string | null {
   return typeof state === 'object' && state !== null && 'notice' in state && typeof state.notice === 'string' ? state.notice : null
@@ -18,6 +28,8 @@ export function JobPostingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(1, Number.parseInt(searchParams.get('page') ?? '1', 10) || 1)
   const search = searchParams.get('q') ?? ''
+  const rawStatus = searchParams.get('estado')
+  const statusFilter = isStatus(rawStatus) ? rawStatus : null
   const [searchDraft, setSearchDraft] = useState(search)
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const [status, setStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(() => {
@@ -27,8 +39,8 @@ export function JobPostingsPage() {
   const queryClient = useQueryClient()
 
   const listQuery = useQuery({
-    queryKey: jobPostingKeys.list(page, search),
-    queryFn: () => listJobPostings(page, search),
+    queryKey: jobPostingKeys.list(page, search, statusFilter),
+    queryFn: () => listJobPostings(page, search, JOB_POSTINGS_PAGE_SIZE, statusFilter),
     placeholderData: keepPreviousData,
   })
 
@@ -42,10 +54,27 @@ export function JobPostingsPage() {
     onSettled: () => setPendingDelete(null),
   })
 
+  const applying = useMutation({
+    mutationFn: markApplied,
+    onSuccess: async (saved) => {
+      setStatus({ tone: 'success', message: `Marcaste «${saved.title}» como postulada.` })
+      await queryClient.invalidateQueries({ queryKey: jobPostingKeys.all })
+    },
+    onError: () => setStatus({ tone: 'error', message: 'No pudimos guardar la postulación. Intenta de nuevo.' }),
+  })
+
+  const setStatusFilter = (value: ApplicationStatus | null) => {
+    const next = new URLSearchParams()
+    if (search !== '') next.set('q', search)
+    if (value !== null) next.set('estado', value)
+    setSearchParams(next)
+  }
+
   const onSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const next = new URLSearchParams()
     if (searchDraft.trim() !== '') next.set('q', searchDraft.trim())
+    if (statusFilter !== null) next.set('estado', statusFilter)
     setSearchParams(next)
   }
 
@@ -63,9 +92,9 @@ export function JobPostingsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 id="page-title" className="text-3xl font-bold">
-            Mis vacantes
+            Tus vacantes
           </h1>
-          <p className="mt-2 text-graphite">Las ofertas que guardaste para analizar.</p>
+          <p className="mt-2 text-graphite">Las ofertas que guardaste y en qué va cada postulación.</p>
         </div>
         <Link to="/app/vacantes/nueva" className={primaryLinkClass}>
           Nueva vacante
@@ -92,6 +121,27 @@ export function JobPostingsPage() {
       </form>
       </search>
 
+      <fieldset className="mt-4">
+        <legend className="sr-only">Filtrar por estado</legend>
+        <div className="flex flex-wrap gap-2">
+          {[null, ...applicationStatuses].map((option) => (
+            <label
+              key={option ?? 'all'}
+              className="cursor-pointer rounded-full border border-rule bg-sheet px-3 py-1 text-sm font-semibold text-graphite hover:border-graphite has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-sheet has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-pen"
+            >
+              <input
+                type="radio"
+                name="estado"
+                checked={statusFilter === option}
+                onChange={() => setStatusFilter(option)}
+                className="sr-only"
+              />
+              {option === null ? 'Todas' : applicationStatusLabels[option]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <div className="mt-4">{status !== null && <Alert tone={status.tone}>{status.message}</Alert>}</div>
 
       {listQuery.isPending && <LoadingState label="Cargando vacantes…" />}
@@ -99,7 +149,9 @@ export function JobPostingsPage() {
 
       {data !== undefined && data.items.length === 0 && (
         <div className="mt-6 rounded-[var(--radius-sheet)] border-2 border-dashed border-rule bg-sheet p-8 text-center text-sm text-graphite">
-          {search === '' ? (
+          {statusFilter !== null && search === '' ? (
+            <>No tienes vacantes en «{applicationStatusLabels[statusFilter]}».</>
+          ) : search === '' ? (
             <>
               Aún no has guardado vacantes.{' '}
               <Link to="/app/vacantes/nueva" className="font-semibold text-pen underline">
@@ -122,6 +174,11 @@ export function JobPostingsPage() {
                 posting={posting}
                 confirming={pendingDelete === posting.id}
                 deleting={deletion.isPending && deletion.variables === posting.id}
+                marking={applying.isPending && applying.variables === posting.id}
+                onMarkApplied={() => {
+                  setStatus(null)
+                  applying.mutate(posting.id)
+                }}
                 onAskDelete={() => {
                   setStatus(null)
                   setPendingDelete(posting.id)
@@ -152,19 +209,38 @@ interface JobPostingRowProps {
   posting: JobPostingSummary
   confirming: boolean
   deleting: boolean
+  marking: boolean
+  onMarkApplied: () => void
   onAskDelete: () => void
   onCancelDelete: () => void
   onConfirmDelete: () => void
 }
 
-function JobPostingRow({ posting, confirming, deleting, onAskDelete, onCancelDelete, onConfirmDelete }: JobPostingRowProps) {
+function JobPostingRow({ posting, confirming, deleting, marking, onMarkApplied, onAskDelete, onCancelDelete, onConfirmDelete }: JobPostingRowProps) {
   const details = [posting.company, posting.location, workModeLabels[posting.workMode]].filter((value) => value !== null && value !== '')
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 p-4">
       <div className="min-w-0">
-        <h2 className="truncate font-semibold">{posting.title}</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="truncate font-semibold">
+            <Link to={`/app/vacantes/${posting.id}/editar`} className="hover:text-pen hover:underline">
+              {posting.title}
+            </Link>
+          </h2>
+          <ApplicationStatusPill status={posting.applicationStatus} />
+        </div>
         {details.length > 0 && <p className="mt-1 text-sm text-graphite">{details.join(', ')}</p>}
-        <p className="mt-0.5 text-xs text-graphite">Guardada el {formatDate(posting.createdAt)}</p>
+        <p className="mt-0.5 text-xs text-graphite">
+          {posting.appliedOn !== null ? `Te postulaste el ${formatDay(posting.appliedOn)}` : `Guardada el ${formatDate(posting.createdAt)}`}
+          {posting.sourceUrl !== null && (
+            <>
+              {', '}
+              <a href={posting.sourceUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-pen underline">
+                ver oferta original<span className="sr-only"> de {posting.title} (se abre en otra pestaña)</span>
+              </a>
+            </>
+          )}
+        </p>
       </div>
       {confirming ? (
         <fieldset className="flex items-center gap-2 text-sm">
@@ -178,7 +254,12 @@ function JobPostingRow({ posting, confirming, deleting, onAskDelete, onCancelDel
           </Button>
         </fieldset>
       ) : (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {posting.applicationStatus === 'saved' && (
+            <Button variant="secondary" onClick={onMarkApplied} disabled={marking} aria-label={`Marcar ${posting.title} como postulada`}>
+              {marking ? 'Guardando…' : 'Me postulé'}
+            </Button>
+          )}
           <Link
             to={`/app/analisis/nuevo?vacante=${posting.id}`}
             aria-label={`Analizar ${posting.title}`}

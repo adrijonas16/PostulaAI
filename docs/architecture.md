@@ -48,7 +48,7 @@ Implementado en Fase 0: host, ProblemDetails, manejador global de excepciones, `
 
 ## Modelo de datos
 
-Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). Fase 3: `Analysis` (migración `AddAnalyses`), con `ProviderCalled` para contar el uso y `JobTitle`/`JobCompany` desnormalizados para el historial.
+Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). Fase 3: `Analysis` (migración `AddAnalyses`). Seguimiento de postulaciones: columnas de postulación en `JobPosting` (migración `AddApplicationTracking`), con `ProviderCalled` para contar el uso y `JobTitle`/`JobCompany` desnormalizados para el historial.
 
 ```text
 User 1──* RefreshToken
@@ -70,7 +70,7 @@ User 1──* AuditLog
 | `Certification` | Id, ProfileId, Name, Issuer, IssuedOn?, Url? |
 | `ProfileSkill` | Id, ProfileId, Name, Category (`technical` \| `soft`) |
 | `ProfileLanguage` | Id, ProfileId, Language, Proficiency |
-| `JobPosting` | Id, UserId, Title, Company, Location, WorkMode (`onsite` \| `hybrid` \| `remote` \| `unspecified`), Description, timestamps |
+| `JobPosting` | Id, UserId, Title, Company, Location, WorkMode (`onsite` \| `hybrid` \| `remote` \| `unspecified`), Description, SourceUrl?, ApplicationStatus (`saved` \| `applied` \| `interview` \| `offer` \| `rejected`), AppliedOn?, ApplicationNotes?, SubmittedSummary?, SubmittedCoverLetter?, ApplicationUpdatedAt?, timestamps |
 | `Analysis` | Id, UserId, ProfileId?, JobPostingId?, Status (`pending` \| `completed` \| `failed`), CompatibilityScore?, ResultJson? (jsonb, solo si es válido), ProfileSnapshot (jsonb), JobPostingSnapshot (jsonb), PromptId, PromptVersion, Model, Language, InputTokens, OutputTokens, LatencyMs, RepairAttempted, ErrorCode?, CreatedAt, CompletedAt? |
 | `AuditLog` | Id, UserId?, Action, EntityType, EntityId?, CorrelationId, Metadata (jsonb, sin datos personales), OccurredAt |
 

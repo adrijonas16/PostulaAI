@@ -26,6 +26,7 @@ Compatibilidad **explicada** (nunca un número aislado), fortalezas respaldadas 
 | Vacantes: crear, editar, eliminar e historial con búsqueda | ✅ 2 |
 | Análisis con IA: compatibilidad estimada, fortalezas, brechas, palabras clave, recomendaciones, resumen adaptado y carta de presentación | ✅ 3–4 |
 | Historial y detalle de análisis | ✅ 3–4 |
+| Seguimiento de postulaciones: estado (sin postular, postulé, entrevista, oferta, descartada), fecha, notas y los textos que enviaste. Lo registra el usuario; PostulaAI no se conecta a LinkedIn ni a otros portales | ✅ |
 | Evaluación reproducible del prompt | 5 |
 
 ## Política de no invención
