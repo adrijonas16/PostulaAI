@@ -6,6 +6,8 @@ public static class OutputSchemas
 {
     public const string JobAnalysisV1 = "job-analysis-v1";
 
+    public const string CvExtractionV1 = "cv-extraction-v1";
+
     /// <summary>Returns the JSON Schema text sent to the provider as structured output format.</summary>
     public static string Load(string name)
     {

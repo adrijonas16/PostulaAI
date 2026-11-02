@@ -55,6 +55,13 @@ Reglas:
 - Errores `429`, `529` y `5xx` del proveedor: hasta 2 reintentos con espera acotada (respeta `retry-after`, máximo 20 s) y después un mensaje claro al usuario.
 - Los logs del análisis solo registran id, estado, código de error, modelo, versión de prompt, tokens, latencia y si hubo reparación. Nunca el perfil, la vacante, el prompt ni la respuesta.
 
+## Importación de CV ✅
+
+- El archivo se procesa en memoria y se descarta: no se guarda en disco, base de datos ni logs. Tampoco se guarda su texto.
+- El tipo se detecta por contenido (`%PDF-` o ZIP con `word/document.xml`), no por la extensión. Hay límites de tamaño (5 MB por archivo, 20 MB del XML descomprimido, 15 páginas de PDF) y el XML se lee sin DTD, contra XXE.
+- El texto del CV se envía al proveedor de IA solo para extraer los campos, y el resultado no se guarda hasta que el usuario lo confirma.
+- La auditoría registra `profile.cv_imported` sin contenido.
+
 ## Infraestructura
 
 - ✅ En `docker-compose`, PostgreSQL y la API solo escuchan en `127.0.0.1`.

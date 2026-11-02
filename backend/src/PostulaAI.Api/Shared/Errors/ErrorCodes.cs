@@ -22,4 +22,10 @@ public static class ErrorCodes
     public const string AnalysisNotFound = "analysis_not_found";
     public const string ProfileRequired = "profile_required";
     public const string UsageLimitReached = "usage_limit_reached";
+
+    public const string CvTooLarge = "cv_too_large";
+    public const string CvUnsupportedFormat = "cv_unsupported_format";
+    public const string CvUnreadable = "cv_unreadable";
+    public const string CvNoText = "cv_no_text";
+    public const string CvFileRequired = "cv_file_required";
 }

@@ -8,7 +8,8 @@ import { Button } from '../../shared/ui/Button'
 import { TextAreaField, TextField } from '../../shared/ui/fields'
 import { LoadingState } from '../../shared/ui/LoadingState'
 import { getProfile, profileQueryKey, saveProfile } from './profileApi'
-import { emptyProfile, profileErrorPath, profileSchema, toFormValues, toProfileRequest, type ProfileFormValues } from './profileForm'
+import { CvImportCard } from './CvImportCard'
+import { draftToFormValues, emptyProfile, profileErrorPath, profileSchema, toFormValues, toProfileRequest, type ProfileFormValues } from './profileForm'
 import {
   CertificationsSection,
   EducationSection,
@@ -22,6 +23,7 @@ export function ProfilePage() {
   const queryClient = useQueryClient()
   const profileQuery = useQuery({ queryKey: profileQueryKey, queryFn: getProfile })
   const [status, setStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(null)
+  const [importNotice, setImportNotice] = useState<string[] | null>(null)
 
   const form = useForm<ProfileFormValues>({ resolver: zodResolver(profileSchema), defaultValues: emptyProfile })
   const {
@@ -30,7 +32,8 @@ export function ProfilePage() {
     handleSubmit,
     reset,
     setError,
-    formState: { errors, isSubmitting },
+    trigger,
+    formState: { errors, isSubmitting, isDirty },
   } = form
 
   useEffect(() => {
@@ -51,6 +54,7 @@ export function ProfilePage() {
       setStatus(null)
       try {
         await mutation.mutateAsync(toProfileRequest(values))
+        setImportNotice(null)
         setStatus({ tone: 'success', message: 'Perfil guardado.' })
       } catch (error) {
         setStatus({ tone: 'error', message: applyServerErrors(error, setError, profileErrorPath) })
@@ -84,7 +88,33 @@ export function ProfilePage() {
         escribas aquí.
       </p>
 
-      <form noValidate onSubmit={onSubmit} className="mt-8 space-y-6">
+      <div className="mt-8 space-y-4">
+        <CvImportCard
+          hasExistingData={isDirty || profileQuery.data !== null}
+          onImported={({ draft, warnings }) => {
+            reset(draftToFormValues(draft), { keepDefaultValues: true })
+            setStatus(null)
+            setImportNotice(warnings)
+            // Show what is still missing (dates, language levels...) right away.
+            void trigger()
+          }}
+        />
+        {importNotice !== null && (
+          <Alert tone="info">
+            <p className="font-medium">Formulario precargado desde tu CV. Aún no se ha guardado.</p>
+            <p className="mt-1">Revisa cada sección, completa lo marcado en rojo y pulsa «Guardar perfil».</p>
+            {importNotice.length > 0 && (
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {importNotice.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            )}
+          </Alert>
+        )}
+      </div>
+
+      <form noValidate onSubmit={onSubmit} className="mt-6 space-y-6">
         <FormSection id="basics-title" title="Datos principales">
           <TextField label="Nombre profesional" required autoComplete="name" error={errors.fullName?.message} {...register('fullName')} />
           <TextField

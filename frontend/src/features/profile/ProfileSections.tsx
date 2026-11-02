@@ -24,6 +24,7 @@ const educationStatusOptions = [
 ] as const
 
 const proficiencyOptions = [
+  { value: '', label: 'Elige el nivel' },
   { value: 'basic', label: 'Básico' },
   { value: 'intermediate', label: 'Intermedio' },
   { value: 'advanced', label: 'Avanzado' },

@@ -4,6 +4,8 @@
 
 ## Qué se evalúa
 
+> El prompt `cv-extraction-v1` (importación de CV) también debe tener su propio dataset y métricas (campos copiados correctamente, cero habilidades inventadas). Pendiente en la Fase 5.
+
 El prompt de análisis (`job-analysis-vN`) junto con su esquema y sus validadores, usando **el mismo código** que producción (`PostulaAI.AI`).
 
 ## Dataset (`evals/datasets/job-analysis-dataset-v1.json`)

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   educationStatuses,
   languageProficiencies,
+  type ProfileDraft,
   type ProfileRequest,
   type ProfileResponse,
 } from '../../shared/api/types'
@@ -86,7 +87,13 @@ export const profileSchema = z.object({
   technicalSkillsText: z.string(),
   softSkillsText: z.string(),
   languages: z
-    .array(z.object({ language: required('Ingresa el idioma.', 100), proficiency: z.enum(languageProficiencies) }))
+    .array(
+      z.object({
+        language: required('Ingresa el idioma.', 100),
+        // '' = not chosen yet (e.g. a CV that does not state the level); it must be chosen before saving.
+        proficiency: z.union([z.enum(languageProficiencies), z.literal('')]).refine((value) => value.length > 0, 'Elige el nivel.'),
+      }),
+    )
     .max(20, 'Puedes registrar hasta 20 idiomas.'),
 })
 
@@ -196,7 +203,12 @@ export function toProfileRequest(values: ProfileFormValues): ProfileRequest {
     })),
     technicalSkills: splitList(values.technicalSkillsText),
     softSkills: splitList(values.softSkillsText),
-    languages: values.languages.map((item) => ({ language: item.language.trim(), proficiency: item.proficiency })),
+    languages: values.languages.map((item) => {
+      if (item.proficiency === '') {
+        throw new Error('Language level must be validated before building the request.')
+      }
+      return { language: item.language.trim(), proficiency: item.proficiency }
+    }),
   }
 }
 
@@ -273,4 +285,19 @@ export function profileErrorPath(apiPath: string): string | null {
     segments[segments.length - 1] = fieldRenames[field] ?? field
   }
   return segments.join('.')
+}
+
+/** Converts an imported CV draft into form values; missing data stays empty so validation asks the user for it. */
+export function draftToFormValues(draft: ProfileDraft): ProfileFormValues {
+  const base = toFormValues({
+    ...draft,
+    id: '',
+    updatedAt: '',
+    experiences: draft.experiences.map((item) => ({ ...item, startDate: item.startDate ?? '' })),
+    languages: [],
+  })
+  return {
+    ...base,
+    languages: draft.languages.map((item) => ({ language: item.language, proficiency: item.proficiency ?? '' })),
+  }
 }
