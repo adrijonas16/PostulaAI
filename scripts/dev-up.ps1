@@ -12,8 +12,14 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
   Write-Host 'No se encontró Docker. Instala Docker Desktop: https://www.docker.com/products/docker-desktop/' -ForegroundColor Red
   exit 1
 }
-docker info *> $null
-if ($LASTEXITCODE -ne 0) {
+# Windows PowerShell 5.1 turns redirected native stderr into a terminating error under 'Stop',
+# so the engine check runs with 'Continue' and relies on the exit code.
+$previousPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+docker info 2>&1 | Out-Null
+$dockerExitCode = $LASTEXITCODE
+$ErrorActionPreference = $previousPreference
+if ($dockerExitCode -ne 0) {
   Write-Host 'Docker Desktop no está en ejecución. Ábrelo, espera a que diga "Engine running" y vuelve a ejecutar este script.' -ForegroundColor Red
   exit 1
 }
