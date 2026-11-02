@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PostulaAI.Api.Modules.Analyses.Domain;
 using PostulaAI.Api.Modules.AuditLogs.Domain;
 using PostulaAI.Api.Modules.Auth.Domain;
 using PostulaAI.Api.Modules.JobPostings.Domain;
@@ -20,6 +21,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<ProfessionalProfile> ProfessionalProfiles => Set<ProfessionalProfile>();
 
     public DbSet<JobPosting> JobPostings => Set<JobPosting>();
+
+    public DbSet<Analysis> Analyses => Set<Analysis>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 

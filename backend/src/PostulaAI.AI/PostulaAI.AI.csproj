@@ -2,9 +2,13 @@
   <!--
     AI library shared by the API and the evaluation runner.
     Must stay free of web-host, persistence and API project references (enforced by ArchitectureTests).
+    Prompts and schemas are embedded so production and evals always load the exact same bytes.
   -->
   <ItemGroup>
-    <None Include="Prompts\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="Schemas\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Prompts\*.txt" LogicalName="Prompts.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Schemas\*.json" LogicalName="Schemas.%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="PostulaAI.UnitTests" />
   </ItemGroup>
 </Project>

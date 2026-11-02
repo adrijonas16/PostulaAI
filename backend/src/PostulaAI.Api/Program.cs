@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using PostulaAI.Api.Modules.Analyses;
 using PostulaAI.Api.Modules.AuditLogs;
 using PostulaAI.Api.Modules.Auth;
 using PostulaAI.Api.Modules.JobPostings;
@@ -55,6 +56,7 @@ builder.Services.AddScoped<IAuditTrail, AuditTrail>();
 builder.Services.AddAuthModule();
 builder.Services.AddProfilesModule();
 builder.Services.AddScoped<JobPostingService>();
+builder.Services.AddAnalysesModule();
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>(name: "postgres", tags: ["ready"]);

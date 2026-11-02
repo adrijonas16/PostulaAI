@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { postingSummary, sampleProfile } from '../../test/fixtures'
@@ -28,6 +28,8 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Empresa no indicada')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /ver las 8 vacantes/i })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /editar perfil/i })).toBeInTheDocument()
-    expect(screen.getByText(/el análisis con ia estará disponible/i)).toBeInTheDocument()
+    expect(await screen.findByText(/te quedan 10 de 10 análisis/i)).toBeInTheDocument()
+    const analysisCard = screen.getByRole('article', { name: 'Análisis' })
+    expect(within(analysisCard).getByRole('link', { name: 'Nuevo análisis' })).toHaveAttribute('href', '/app/analisis/nuevo')
   })
 })

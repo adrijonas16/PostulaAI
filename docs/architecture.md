@@ -1,6 +1,6 @@
 # Arquitectura
 
-> Estado: **Fase 2**. Este documento describe la arquitectura objetivo del MVP. Lo que aún no existe en código está marcado como *(pendiente — Fase N)*.
+> Estado: **Fases 3–4**. Este documento describe la arquitectura objetivo del MVP. Lo que aún no existe en código está marcado como *(pendiente — Fase N)*.
 
 ## Vista general
 
@@ -48,7 +48,7 @@ Implementado en Fase 0: host, ProblemDetails, manejador global de excepciones, `
 
 ## Modelo de datos
 
-Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). `Analysis`: *pendiente — Fase 3*.
+Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). Fase 3: `Analysis` (migración `AddAnalyses`), con `ProviderCalled` para contar el uso y `JobTitle`/`JobCompany` desnormalizados para el historial.
 
 ```text
 User 1──* RefreshToken
@@ -93,10 +93,10 @@ Todos bajo `/api/v1`, salvo salud. Errores en formato ProblemDetails con `errorC
 | GET / PUT | `/profiles/me` | Leer / reemplazar el perfil completo | ✅ Fase 1 |
 | GET / POST | `/job-postings` | Listar (paginado, `page`, `pageSize` ≤ 50, `search` en cargo/empresa) / crear | ✅ Fase 2 |
 | GET / PUT / DELETE | `/job-postings/{id}` | Detalle / editar / eliminar (ajena → `404`) | ✅ Fase 2 |
-| POST | `/analyses` | Ejecutar análisis `{ jobPostingId, language }` | Fase 3 |
-| GET | `/analyses` | Historial paginado | Fase 2–3 |
-| GET / DELETE | `/analyses/{id}` | Detalle / eliminar | Fase 3 |
-| GET | `/usage/me` | Análisis restantes en la ventana actual | Fase 3 |
+| POST | `/analyses` | Ejecutar análisis `{ jobPostingId, language }` (síncrono). Errores: `profile_required` 409, `usage_limit_reached` 429, `ai_*` 502/503/422 | ✅ Fase 3 |
+| GET | `/analyses` | Historial paginado con banda de puntaje | ✅ Fase 3 |
+| GET / DELETE | `/analyses/{id}` | Detalle (resultado, banda y conteos) / eliminar (ajeno → `404`) | ✅ Fase 3 |
+| GET | `/usage/me` | Análisis usados y restantes en la ventana móvil | ✅ Fase 3 |
 
 **Autorización:** toda consulta filtra por el `UserId` del token. Un recurso de otro usuario responde `404`.
 

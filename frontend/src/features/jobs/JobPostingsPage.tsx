@@ -181,6 +181,13 @@ function JobPostingRow({ posting, confirming, deleting, onAskDelete, onCancelDel
       ) : (
         <div className="flex items-center gap-2">
           <Link
+            to={`/app/analisis/nuevo?vacante=${posting.id}`}
+            aria-label={`Analizar ${posting.title}`}
+            className="rounded-md px-3 py-2 text-sm font-medium text-accent hover:bg-accent-soft"
+          >
+            Analizar
+          </Link>
+          <Link
             to={`/app/vacantes/${posting.id}/editar`}
             aria-label={`Editar ${posting.title}`}
             className="rounded-md px-3 py-2 text-sm font-medium text-accent hover:bg-accent-soft"

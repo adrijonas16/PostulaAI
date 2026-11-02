@@ -2,7 +2,7 @@
 
 Plataforma web que compara tu perfil profesional con una vacante y te dice, con evidencia, en qué coincides, qué te falta y cómo adaptar tu postulación, **sin inventar nada**.
 
-> **Estado del proyecto: Fase 2 completada** (cuentas, sesión segura, perfil profesional y vacantes). El análisis con IA aún no está implementado. Consulta el [roadmap](docs/roadmap.md).
+> **Estado del proyecto: Fases 1 a 4 completadas** (cuentas, perfil, vacantes y análisis con IA con su interfaz de resultados). Las evaluaciones reproducibles del prompt (Fase 5) están pendientes y **no se ha medido aún la calidad del prompt**. Consulta el [roadmap](docs/roadmap.md).
 
 ## Problema
 
@@ -23,8 +23,8 @@ Compatibilidad **explicada** (nunca un número aislado), fortalezas respaldadas 
 | Registro, inicio y cierre de sesión | ✅ 1 |
 | Perfil profesional: experiencia, educación, proyectos, certificaciones, habilidades, idiomas y enlaces | ✅ 1 |
 | Vacantes: crear, editar, eliminar e historial con búsqueda | ✅ 2 |
-| Análisis con IA: compatibilidad estimada, fortalezas, brechas, palabras clave, recomendaciones, resumen adaptado y carta de presentación | 3–4 |
-| Historial y detalle de análisis | 2–4 |
+| Análisis con IA: compatibilidad estimada, fortalezas, brechas, palabras clave, recomendaciones, resumen adaptado y carta de presentación | ✅ 3–4 |
+| Historial y detalle de análisis | ✅ 3–4 |
 | Evaluación reproducible del prompt | 5 |
 
 ## Política de no invención
@@ -140,7 +140,7 @@ docker compose up --build
 | `ASPNETCORE_ENVIRONMENT` | `Development` / `Production` | Fase 0 |
 | `JWT_SIGNING_KEY` (`Jwt__SigningKey` en el backend) | Clave de firma JWT, **obligatoria**, ≥ 32 bytes aleatorios. Sin ella la API no arranca | Fase 1 |
 | `ANTHROPIC_API_KEY` | Clave de la API de Claude (solo backend) | Fase 3 |
-| `ANTHROPIC_MODEL` | Identificador del modelo | Fase 3 |
+| `ANTHROPIC_MODEL` | Identificador del modelo (vacío → `claude-sonnet-5-5`) | Fase 3 |
 
 Nunca se commitean valores reales. Ver [docs/security.md](docs/security.md).
 
@@ -180,7 +180,10 @@ Aún no hay despliegue público (Fase 6).
 
 ## Limitaciones conocidas
 
-- Aún no existe el análisis con IA (Fases 3 y 4); esas pantallas son marcadores.
+- Sin `ANTHROPIC_API_KEY` el análisis responde "no configurado" (no consume el límite de uso).
+- El análisis es síncrono (15–60 s); si dos peticiones llegan a la vez, el límite de uso puede excederse en uno.
+- La verificación contra invención es determinista y cubre un vocabulario curado de tecnologías, certificaciones e idiomas; no detecta todas las invenciones posibles (por ejemplo, años de experiencia).
+- Aún no hay métricas de calidad del prompt: el dataset y el runner de evaluaciones son la Fase 5.
 - Registrarse con un correo ya usado responde "ya existe una cuenta": permite saber si un correo está registrado (compromiso aceptado en v1, mitigado con límite de intentos).
 - Si la misma sesión se abre en varias pestañas, un refresco simultáneo puede cerrar la sesión (detección de reutilización del refresh token). Dentro de una pestaña las renovaciones son de un solo vuelo.
 - La eliminación de cuenta aún no está disponible (roadmap).

@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: **Fase 2**. Lo implementado se indica con ✅; lo demás está planificado.
+> Estado: **Fases 3–4**. Lo implementado se indica con ✅; lo demás está planificado.
 
 ## Secretos
 
@@ -29,7 +29,7 @@
 - ✅ El perfil solo es accesible por `/profiles/me`: no existe ruta para leer el de otro usuario. Una prueba de integración A/B lo verifica.
 - ✅ Vacantes: toda consulta filtra por `UserId` y `Id` a la vez; una vacante ajena responde `404` en GET, PUT y DELETE y nunca aparece en el listado (prueba de integración A/B).
 - ✅ La búsqueda escapa los comodines de `LIKE`, así que el texto del usuario se compara literalmente.
-- Análisis: misma regla *(Fase 3)*.
+- ✅ Análisis: misma regla, con prueba de integración A/B. Crear un análisis exige que la vacante sea del usuario.
 
 ## Datos personales
 
@@ -48,11 +48,12 @@ Reglas:
 - Los datos se envían al proveedor de IA únicamente para ejecutar el análisis que el usuario solicita. No se usan para entrenar modelos ni se venden o comparten con terceros.
 - **Eliminación de cuenta** *(roadmap)*: `DELETE /api/v1/users/me` borrará en cascada perfil, vacantes, análisis y tokens, y anonimizará los audit logs (`UserId` → null).
 
-## Límites de uso *(Fase 3)*
+## Límites de uso ✅ *(Fase 3)*
 
-- Máximo configurable de análisis por usuario y por ventana (valor inicial propuesto: 10 por día).
+- Máximo configurable de análisis por usuario en una ventana móvil (`UsageLimits:Analyses:MaxPerWindow`, por defecto 10 cada 24 h). Solo cuentan los intentos que llegaron al proveedor de IA.
 - Longitud máxima de perfil y vacante para controlar coste y abuso.
-- Errores `429` y `529` del proveedor: reintentos acotados con `retry-after` y después un mensaje claro al usuario.
+- Errores `429`, `529` y `5xx` del proveedor: hasta 2 reintentos con espera acotada (respeta `retry-after`, máximo 20 s) y después un mensaje claro al usuario.
+- Los logs del análisis solo registran id, estado, código de error, modelo, versión de prompt, tokens, latencia y si hubo reparación. Nunca el perfil, la vacante, el prompt ni la respuesta.
 
 ## Infraestructura
 

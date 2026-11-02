@@ -1,0 +1,10 @@
+=== USER ===
+Your previous answer cannot be accepted because it failed these validation checks:
+
+{{validation_errors}}
+
+Return the complete corrected JSON object again, following the same schema and all the original rules.
+- Fix every listed problem.
+- If a check says a term in a strength's evidence or in the adapted summary is not supported by the candidate profile, remove that claim; if it was about a posting requirement, move it to "gaps" instead.
+- Do not add any information that is not present in the candidate profile.
+- Keep writing free-text fields in {{language_name}}.

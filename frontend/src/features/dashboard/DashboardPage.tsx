@@ -4,6 +4,8 @@ import { formatDate } from '../../shared/lib/formatDate'
 import { Alert } from '../../shared/ui/Alert'
 import { LoadingState } from '../../shared/ui/LoadingState'
 import { useAuth } from '../auth/AuthContext'
+import { analysisKeys, getUsage, listAnalyses } from '../analyses/analysesApi'
+import { bandLabels } from '../analyses/analysisLabels'
 import { jobPostingKeys, listJobPostings } from '../jobs/jobsApi'
 import { getProfile, profileQueryKey } from '../profile/profileApi'
 
@@ -12,6 +14,9 @@ const RECENT_COUNT = 5
 export function DashboardPage() {
   const { user } = useAuth()
   const profileQuery = useQuery({ queryKey: profileQueryKey, queryFn: getProfile })
+  const usageQuery = useQuery({ queryKey: analysisKeys.usage, queryFn: getUsage })
+  const analysesQuery = useQuery({ queryKey: analysisKeys.list(1), queryFn: () => listAnalyses(1) })
+  const lastAnalysis = analysesQuery.data?.items.find((item) => item.status === 'completed')
   const recentQuery = useQuery({
     queryKey: [...jobPostingKeys.list(1, ''), RECENT_COUNT],
     queryFn: () => listJobPostings(1, '', RECENT_COUNT),
@@ -62,9 +67,23 @@ export function DashboardPage() {
           <h2 id="analysis-card-title" className="font-semibold">
             Análisis
           </h2>
-          <p className="mt-2 text-sm text-ink-muted">
-            El análisis con IA estará disponible en la siguiente fase. Mientras tanto, prepara tu perfil y guarda las vacantes que te interesan.
-          </p>
+          {usageQuery.data !== undefined && (
+            <p className="mt-2 text-sm text-ink-muted">
+              Te quedan {usageQuery.data.remaining} de {usageQuery.data.limit} análisis en las últimas {usageQuery.data.windowHours} horas.
+            </p>
+          )}
+          {lastAnalysis !== undefined && lastAnalysis.scoreBand !== null && (
+            <p className="mt-2 text-sm">
+              Último:{' '}
+              <Link to={`/app/analisis/${lastAnalysis.id}`} className="font-medium text-accent underline">
+                {lastAnalysis.jobTitle}
+              </Link>{' '}
+              · {bandLabels[lastAnalysis.scoreBand]}
+            </p>
+          )}
+          <Link to="/app/analisis/nuevo" className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong">
+            Nuevo análisis
+          </Link>
         </article>
       </div>
 

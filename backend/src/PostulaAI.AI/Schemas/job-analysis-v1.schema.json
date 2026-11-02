@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "compatibilityScore",
+    "summary",
+    "strengths",
+    "gaps",
+    "keywordsToInclude",
+    "cvRecommendations",
+    "adaptedProfessionalSummary",
+    "coverLetterDraft",
+    "disclaimer"
+  ],
+  "properties": {
+    "compatibilityScore": { "type": "integer" },
+    "summary": { "type": "string" },
+    "strengths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement", "evidence", "importance"],
+        "properties": {
+          "requirement": { "type": "string" },
+          "evidence": { "type": "string" },
+          "importance": { "type": "string", "enum": ["required", "preferred"] }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement", "gapType", "importance", "recommendation"],
+        "properties": {
+          "requirement": { "type": "string" },
+          "gapType": { "type": "string", "enum": ["missing_skill", "missing_experience", "unclear_evidence", "other"] },
+          "importance": { "type": "string", "enum": ["required", "preferred"] },
+          "recommendation": { "type": "string" }
+        }
+      }
+    },
+    "keywordsToInclude": { "type": "array", "items": { "type": "string" } },
+    "cvRecommendations": { "type": "array", "items": { "type": "string" } },
+    "adaptedProfessionalSummary": { "type": "string" },
+    "coverLetterDraft": { "type": "string" },
+    "disclaimer": { "type": "string" }
+  }
+}
