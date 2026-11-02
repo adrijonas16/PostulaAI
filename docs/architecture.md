@@ -1,6 +1,6 @@
 # Arquitectura
 
-> Estado: **Fase 1**. Este documento describe la arquitectura objetivo del MVP. Lo que aún no existe en código está marcado como *(pendiente — Fase N)*.
+> Estado: **Fase 2**. Este documento describe la arquitectura objetivo del MVP. Lo que aún no existe en código está marcado como *(pendiente — Fase N)*.
 
 ## Vista general
 
@@ -48,7 +48,7 @@ Implementado en Fase 0: host, ProblemDetails, manejador global de excepciones, `
 
 ## Modelo de datos
 
-Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). `JobPosting` y `Analysis`: *pendiente — Fases 2 y 3*.
+Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). `Analysis`: *pendiente — Fase 3*.
 
 ```text
 User 1──* RefreshToken
@@ -91,8 +91,8 @@ Todos bajo `/api/v1`, salvo salud. Errores en formato ProblemDetails con `errorC
 | POST | `/auth/logout` | Revoca la familia de tokens | ✅ Fase 1 |
 | GET | `/auth/me` | Usuario actual | ✅ Fase 1 |
 | GET / PUT | `/profiles/me` | Leer / reemplazar el perfil completo | ✅ Fase 1 |
-| GET / POST | `/job-postings` | Listar (paginado) / crear | Fase 2 |
-| GET / PUT / DELETE | `/job-postings/{id}` | Detalle / editar / eliminar | Fase 2 |
+| GET / POST | `/job-postings` | Listar (paginado, `page`, `pageSize` ≤ 50, `search` en cargo/empresa) / crear | ✅ Fase 2 |
+| GET / PUT / DELETE | `/job-postings/{id}` | Detalle / editar / eliminar (ajena → `404`) | ✅ Fase 2 |
 | POST | `/analyses` | Ejecutar análisis `{ jobPostingId, language }` | Fase 3 |
 | GET | `/analyses` | Historial paginado | Fase 2–3 |
 | GET / DELETE | `/analyses/{id}` | Detalle / eliminar | Fase 3 |
@@ -109,7 +109,7 @@ frontend/src/
   shared/     ui/ (componentes accesibles) · api/ (cliente HTTP tipado, sesión en memoria) · lib/
 ```
 
-Rutas: `/`, `/iniciar-sesion`, `/registro`, `/app`, `/app/perfil`, `/app/vacantes/nueva`, `/app/vacantes/:id/editar`, `/app/analisis/nuevo`, `/app/analisis`, `/app/analisis/:id`, `/app/configuracion`.
+Rutas: `/`, `/iniciar-sesion`, `/registro`, `/app`, `/app/perfil`, `/app/vacantes`, `/app/vacantes/nueva`, `/app/vacantes/:id/editar`, `/app/analisis/nuevo`, `/app/analisis`, `/app/analisis/:id`, `/app/configuracion`.
 
 Herramientas: React 19, React Router, TanStack Query, react-hook-form + zod, Tailwind CSS 4, TypeScript estricto, oxlint, Vitest + Testing Library + MSW.
 

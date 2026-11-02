@@ -40,7 +40,7 @@ public sealed class AuthService(
             return AppError.Conflict(ErrorCodes.EmailAlreadyRegistered, "Ya existe una cuenta con ese correo.");
         }
 
-        var now = time.GetUtcNow();
+        var now = time.GetUtcNowForStorage();
         var newUser = new User
         {
             Email = email,
@@ -82,7 +82,7 @@ public sealed class AuthService(
             return InvalidCredentials;
         }
 
-        var now = time.GetUtcNow();
+        var now = time.GetUtcNowForStorage();
         if (verification == PasswordVerificationResult.SuccessRehashNeeded)
         {
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
@@ -109,7 +109,7 @@ public sealed class AuthService(
             return InvalidRefreshToken;
         }
 
-        var now = time.GetUtcNow();
+        var now = time.GetUtcNowForStorage();
         switch (RefreshTokenPolicy.Evaluate(stored, now))
         {
             case RefreshTokenState.Reused:
@@ -153,7 +153,7 @@ public sealed class AuthService(
             return;
         }
 
-        await RevokeFamilyAsync(stored.FamilyId, time.GetUtcNow(), cancellationToken);
+        await RevokeFamilyAsync(stored.FamilyId, time.GetUtcNowForStorage(), cancellationToken);
         audit.Record(AuditActions.LoggedOut, stored.UserId, nameof(User), stored.UserId);
         await db.SaveChangesAsync(cancellationToken);
     }

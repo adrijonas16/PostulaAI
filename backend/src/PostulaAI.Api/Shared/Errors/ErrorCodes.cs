@@ -18,4 +18,5 @@ public static class ErrorCodes
     public const string InvalidRefreshToken = "invalid_refresh_token";
 
     public const string ProfileNotFound = "profile_not_found";
+    public const string JobPostingNotFound = "job_posting_not_found";
 }

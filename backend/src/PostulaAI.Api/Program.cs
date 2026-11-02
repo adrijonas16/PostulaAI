@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using PostulaAI.Api.Modules.AuditLogs;
 using PostulaAI.Api.Modules.Auth;
+using PostulaAI.Api.Modules.JobPostings;
 using PostulaAI.Api.Modules.ProfessionalProfiles;
 using PostulaAI.Api.Shared.Errors;
 using PostulaAI.Api.Shared.Persistence;
@@ -53,6 +54,7 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 builder.Services.AddScoped<IAuditTrail, AuditTrail>();
 builder.Services.AddAuthModule();
 builder.Services.AddProfilesModule();
+builder.Services.AddScoped<JobPostingService>();
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>(name: "postgres", tags: ["ready"]);

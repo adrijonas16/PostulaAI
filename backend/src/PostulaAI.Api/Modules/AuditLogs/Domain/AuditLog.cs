@@ -32,6 +32,9 @@ public static class AuditActions
     public const string RefreshTokenReuseDetected = "auth.refresh_token_reuse_detected";
     public const string LoggedOut = "auth.logged_out";
     public const string ProfileUpdated = "profile.updated";
+    public const string JobPostingCreated = "job_posting.created";
+    public const string JobPostingUpdated = "job_posting.updated";
+    public const string JobPostingDeleted = "job_posting.deleted";
 }
 
 internal sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>

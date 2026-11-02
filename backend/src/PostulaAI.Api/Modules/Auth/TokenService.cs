@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using PostulaAI.Api.Modules.Users.Domain;
 
+using PostulaAI.Api.Shared.Persistence;
+
 namespace PostulaAI.Api.Modules.Auth;
 
 public sealed record AccessToken(string Token, DateTimeOffset ExpiresAt);
@@ -32,7 +34,7 @@ public sealed class TokenService(IOptions<JwtOptions> options, TimeProvider time
         ArgumentNullException.ThrowIfNull(user);
 
         var jwt = options.Value;
-        var now = time.GetUtcNow();
+        var now = time.GetUtcNowForStorage();
         var expiresAt = now.AddMinutes(jwt.AccessTokenMinutes);
 
         var descriptor = new SecurityTokenDescriptor

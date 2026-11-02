@@ -97,6 +97,54 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("PostulaAI.Api.Modules.JobPostings.Domain.JobPosting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Company")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("character varying(20000)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("WorkMode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("job_postings", (string)null);
+                });
+
             modelBuilder.Entity("PostulaAI.Api.Modules.ProfessionalProfiles.Domain.Certification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -401,6 +449,15 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                 });
 
             modelBuilder.Entity("PostulaAI.Api.Modules.Auth.Domain.RefreshToken", b =>
+                {
+                    b.HasOne("PostulaAI.Api.Modules.Users.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PostulaAI.Api.Modules.JobPostings.Domain.JobPosting", b =>
                 {
                     b.HasOne("PostulaAI.Api.Modules.Users.Domain.User", null)
                         .WithMany()

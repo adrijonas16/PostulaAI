@@ -7,6 +7,7 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { RedirectIfAuthenticated, RequireAuth } from '../features/auth/RouteGuards'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { JobPostingEditorPage } from '../features/jobs/JobPostingEditorPage'
+import { JobPostingsPage } from '../features/jobs/JobPostingsPage'
 import { LandingPage } from '../features/landing/LandingPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
 import { SettingsPage } from '../features/settings/SettingsPage'
@@ -20,6 +21,7 @@ export const paths = {
   register: '/registro',
   dashboard: '/app',
   profile: '/app/perfil',
+  jobPostings: '/app/vacantes',
   newJobPosting: '/app/vacantes/nueva',
   editJobPosting: (id: string) => `/app/vacantes/${id}/editar`,
   runAnalysis: '/app/analisis/nuevo',
@@ -51,6 +53,7 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, element: <DashboardPage /> },
           { path: 'perfil', element: <ProfilePage /> },
+          { path: 'vacantes', element: <JobPostingsPage /> },
           { path: 'vacantes/nueva', element: <JobPostingEditorPage /> },
           { path: 'vacantes/:jobPostingId/editar', element: <JobPostingEditorPage /> },
           { path: 'analisis', element: <AnalysisHistoryPage /> },

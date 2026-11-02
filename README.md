@@ -2,7 +2,7 @@
 
 Plataforma web que compara tu perfil profesional con una vacante y te dice, con evidencia, en qué coincides, qué te falta y cómo adaptar tu postulación, **sin inventar nada**.
 
-> **Estado del proyecto: Fase 1 completada** (cuentas, sesión segura y perfil profesional). El análisis con IA aún no está implementado. Consulta el [roadmap](docs/roadmap.md).
+> **Estado del proyecto: Fase 2 completada** (cuentas, sesión segura, perfil profesional y vacantes). El análisis con IA aún no está implementado. Consulta el [roadmap](docs/roadmap.md).
 
 ## Problema
 
@@ -22,7 +22,7 @@ Compatibilidad **explicada** (nunca un número aislado), fortalezas respaldadas 
 |---|---|
 | Registro, inicio y cierre de sesión | ✅ 1 |
 | Perfil profesional: experiencia, educación, proyectos, certificaciones, habilidades, idiomas y enlaces | ✅ 1 |
-| Vacantes: crear, editar, eliminar e historial | 2 |
+| Vacantes: crear, editar, eliminar e historial con búsqueda | ✅ 2 |
 | Análisis con IA: compatibilidad estimada, fortalezas, brechas, palabras clave, recomendaciones, resumen adaptado y carta de presentación | 3–4 |
 | Historial y detalle de análisis | 2–4 |
 | Evaluación reproducible del prompt | 5 |
@@ -180,7 +180,7 @@ Aún no hay despliegue público (Fase 6).
 
 ## Limitaciones conocidas
 
-- Aún no existen vacantes ni análisis con IA (Fases 2 a 4); esas pantallas son marcadores.
+- Aún no existe el análisis con IA (Fases 3 y 4); esas pantallas son marcadores.
 - Registrarse con un correo ya usado responde "ya existe una cuenta": permite saber si un correo está registrado (compromiso aceptado en v1, mitigado con límite de intentos).
 - Si la misma sesión se abre en varias pestañas, un refresco simultáneo puede cerrar la sesión (detección de reutilización del refresh token). Dentro de una pestaña las renovaciones son de un solo vuelo.
 - La eliminación de cuenta aún no está disponible (roadmap).
