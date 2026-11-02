@@ -6,8 +6,8 @@ using PostulaAI.Api.Shared.Security;
 namespace PostulaAI.Api.Shared.Api;
 
 /// <summary>Base for thin controllers: maps service results and validation to ProblemDetails.</summary>
+// No [Produces]: it would override "application/problem+json" on error responses.
 [ApiController]
-[Produces("application/json")]
 public abstract class ApiControllerBase : ControllerBase
 {
     /// <summary>Id of the authenticated user. Only valid on endpoints that require authorization.</summary>
