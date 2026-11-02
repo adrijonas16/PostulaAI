@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import { applyServerErrors } from '../../shared/lib/applyServerErrors'
 import { Alert } from '../../shared/ui/Alert'
 import { Button } from '../../shared/ui/Button'
@@ -11,7 +11,6 @@ import { PASSWORD_MIN_LENGTH, registerSchema, type RegisterFormValues } from './
 
 export function RegisterPage() {
   const { register: registerAccount } = useAuth()
-  const navigate = useNavigate()
   const [formError, setFormError] = useState<string | null>(null)
   const {
     register,
@@ -26,8 +25,8 @@ export function RegisterPage() {
   const onSubmit = handleSubmit(async ({ displayName, email, password }) => {
     setFormError(null)
     try {
+      // On success the RedirectIfAuthenticated guard navigates to the profile.
       await registerAccount({ displayName, email, password })
-      await navigate('/app/perfil', { replace: true })
     } catch (error) {
       setFormError(applyServerErrors(error, setError))
     }
