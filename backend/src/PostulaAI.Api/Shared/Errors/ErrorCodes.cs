@@ -19,4 +19,7 @@ public static class ErrorCodes
 
     public const string ProfileNotFound = "profile_not_found";
     public const string JobPostingNotFound = "job_posting_not_found";
+    public const string AnalysisNotFound = "analysis_not_found";
+    public const string ProfileRequired = "profile_required";
+    public const string UsageLimitReached = "usage_limit_reached";
 }
