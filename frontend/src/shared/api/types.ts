@@ -205,3 +205,23 @@ export interface UsageResponse {
   windowHours: number
   nextSlotAt: string | null
 }
+
+/** Profile pre-filled from a CV. Dates and language levels may be missing; the user completes them before saving. */
+export interface ProfileDraft {
+  fullName: string
+  headline: string | null
+  summary: string | null
+  links: ProfileLinksDto
+  experiences: (Omit<WorkExperienceDto, 'startDate'> & { startDate: string | null })[]
+  education: EducationDto[]
+  projects: ProjectDto[]
+  certifications: CertificationDto[]
+  technicalSkills: string[]
+  softSkills: string[]
+  languages: { language: string; proficiency: LanguageProficiency | null }[]
+}
+
+export interface CvImportResponse {
+  draft: ProfileDraft
+  warnings: string[]
+}

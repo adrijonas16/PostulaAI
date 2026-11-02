@@ -42,7 +42,9 @@ export function refreshSession(): Promise<AuthResponse | null> {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, auth = true } = options
   const init: RequestInit = { method }
-  if (body !== undefined) {
+  if (body instanceof FormData) {
+    init.body = body
+  } else if (body !== undefined) {
     init.body = JSON.stringify(body)
   }
 
@@ -75,7 +77,8 @@ async function sendOrThrow(url: string, init: RequestInit, accessToken: string |
 
 function send(url: string, init: RequestInit, accessToken: string | null): Promise<Response> {
   const headers = new Headers({ Accept: 'application/json' })
-  if (init.body !== undefined) {
+  // FormData sets its own multipart boundary; everything else is JSON.
+  if (init.body !== undefined && !(init.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json')
   }
   if (accessToken !== null) {
