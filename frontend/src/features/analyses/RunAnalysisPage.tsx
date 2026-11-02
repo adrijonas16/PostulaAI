@@ -3,9 +3,9 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { ApiError } from '../../shared/api/ApiError'
 import { Alert } from '../../shared/ui/Alert'
-import { Button } from '../../shared/ui/Button'
-import { SelectField } from '../../shared/ui/fields'
+import { Button, primaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
+import { PageHeader, Sheet } from '../../shared/ui/Sheet'
 import { jobPostingKeys, listJobPostings } from '../jobs/jobsApi'
 import { getProfile, profileQueryKey } from '../profile/profileApi'
 import { analysisKeys, createAnalysis, getUsage } from './analysesApi'
@@ -59,75 +59,103 @@ export function RunAnalysisPage() {
   const limitReached = usage !== undefined && usage.remaining === 0
 
   return (
-    <section aria-labelledby="page-title" className="mx-auto w-full max-w-3xl">
-      <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
-        Nuevo análisis
-      </h1>
-      <p className="mt-2 text-ink-muted">
-        Comparamos tu perfil profesional con la vacante que elijas. La IA solo usa lo que escribiste en tu perfil.
-      </p>
+    <div className="mx-auto w-full max-w-3xl">
+      <PageHeader
+        title="Nuevo análisis"
+        description="Elige una vacante. Comparamos cada requisito con tu perfil y te mostramos qué tienes y qué te falta."
+      />
 
-      <div className="mt-8 space-y-4">
+      <div className="space-y-4">
         {!hasProfile && (
-          <Alert tone="info">
-            Antes de analizar necesitas tu perfil profesional.{' '}
-            <Link to="/app/perfil" className="font-medium text-accent underline">
+          <Sheet id="need-profile-title" title="Primero, tu perfil">
+            <p className="text-graphite">El análisis solo usa lo que está en tu perfil, así que lo necesitamos antes de comparar.</p>
+            <Link to="/app/perfil" className={`${primaryLinkClass} mt-4`}>
               Completar mi perfil
             </Link>
-          </Alert>
+          </Sheet>
         )}
         {hasProfile && postings.length === 0 && (
-          <Alert tone="info">
-            Aún no tienes vacantes guardadas.{' '}
-            <Link to="/app/vacantes/nueva" className="font-medium text-accent underline">
-              Guarda una vacante
+          <Sheet id="need-posting-title" title="Guarda una vacante">
+            <p className="text-graphite">Aún no tienes vacantes guardadas. Pega el texto de una oferta y vuelve aquí.</p>
+            <Link to="/app/vacantes/nueva" className={`${primaryLinkClass} mt-4`}>
+              Guardar una vacante
             </Link>
-          </Alert>
+          </Sheet>
         )}
 
         {hasProfile && postings.length > 0 && (
-          <form onSubmit={(event) => void onSubmit(event)} className="space-y-5 rounded-lg border border-line bg-surface p-5">
-            <SelectField
-              label="Vacante"
-              value={jobPostingId}
-              onChange={(event) => setSelected(event.target.value)}
-              options={postings.map((posting) => ({
-                value: posting.id,
-                label: posting.company === null ? posting.title : `${posting.title} · ${posting.company}`,
-              }))}
-              disabled={mutation.isPending}
-            />
-            <p className="text-sm text-ink-muted">Idioma del análisis: español.</p>
-            {usage !== undefined && (
-              <p className="text-sm text-ink-muted">
-                Te quedan <strong className="text-ink">{usage.remaining}</strong> de {usage.limit} análisis en las últimas {usage.windowHours} horas.
-              </p>
-            )}
-            {error !== null && (
-              <Alert tone="error">
-                {error.message}
-                {error.code === 'profile_required' && (
-                  <>
-                    {' '}
-                    <Link to="/app/perfil" className="font-medium underline">
-                      Ir a mi perfil
-                    </Link>
-                  </>
-                )}
-              </Alert>
-            )}
-            {mutation.isPending && (
-              <output aria-live="polite" className="block rounded-md bg-accent-soft p-3 text-sm text-accent-strong">
-                Analizando tu perfil frente a la vacante. Suele tardar entre 15 segundos y un minuto; no cierres esta página.
-              </output>
-            )}
-            <Button type="submit" disabled={mutation.isPending || limitReached}>
-              {mutation.isPending ? 'Analizando…' : 'Analizar compatibilidad'}
-            </Button>
-            {limitReached && <p className="text-sm text-ink-muted">Alcanzaste el límite de análisis por ahora.</p>}
+          <form onSubmit={(event) => void onSubmit(event)} className="space-y-6">
+            <fieldset disabled={mutation.isPending}>
+              <legend className="text-lg font-bold">Vacante</legend>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {postings.map((posting) => (
+                  // The label's text comes from the posting data, which the rule cannot see statically.
+                  // oxlint-disable-next-line jsx-a11y/label-has-associated-control
+                  <label
+                    key={posting.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-sheet)] border-2 border-rule bg-sheet p-4 hover:border-graphite has-[:checked]:border-pen has-[:checked]:bg-pen-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-pen"
+                  >
+                    <input
+                      type="radio"
+                      name="vacante"
+                      value={posting.id}
+                      checked={jobPostingId === posting.id}
+                      onChange={() => setSelected(posting.id)}
+                      className="mt-1 size-4 accent-pen"
+                    />
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{posting.title}</span>
+                      <span className="block text-sm text-graphite">{posting.company ?? 'Empresa no indicada'}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <Link to="/app/vacantes/nueva" className="mt-3 inline-block text-sm font-semibold text-pen underline">
+                Agregar otra vacante
+              </Link>
+            </fieldset>
+
+            <div className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5">
+              {usage !== undefined && (
+                <p className="text-sm text-graphite">
+                  Te quedan <strong className="text-ink">{usage.remaining}</strong> de {usage.limit} análisis en las últimas {usage.windowHours} horas.
+                  El análisis se hace en español.
+                </p>
+              )}
+              {error !== null && (
+                <div className="mt-4">
+                  <Alert tone="error">
+                    {error.message}
+                    {error.code === 'profile_required' && (
+                      <>
+                        {' '}
+                        <Link to="/app/perfil" className="font-semibold underline">
+                          Ir a mi perfil
+                        </Link>
+                      </>
+                    )}
+                  </Alert>
+                </div>
+              )}
+              {mutation.isPending && (
+                <output aria-live="polite" className="mt-4 block rounded-[var(--radius-field)] bg-pen-soft p-4 text-sm text-pen-strong">
+                  <span className="mb-3 block h-1.5 overflow-hidden rounded-full bg-sheet">
+                    <span className="block h-full w-1/3 animate-[progress_1.6s_ease-in-out_infinite] rounded-full bg-pen motion-reduce:animate-none" />
+                  </span>
+                  Leyendo la vacante, buscando evidencia en tu perfil y redactando recomendaciones. Suele tardar entre 15 segundos y un minuto; no
+                  cierres esta página.
+                </output>
+              )}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Button type="submit" size="lg" disabled={mutation.isPending || limitReached}>
+                  {mutation.isPending ? 'Analizando…' : 'Analizar compatibilidad'}
+                </Button>
+                {limitReached && <p className="text-sm text-redpen">Alcanzaste el límite de análisis por ahora.</p>}
+              </div>
+            </div>
           </form>
         )}
       </div>
-    </section>
+    </div>
   )
 }

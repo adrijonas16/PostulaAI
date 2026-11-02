@@ -6,12 +6,6 @@ export const bandLabels: Record<ScoreBand, string> = {
   low: 'Compatibilidad baja',
 }
 
-export const bandStyles: Record<ScoreBand, string> = {
-  high: 'bg-emerald-50 text-emerald-900 border-emerald-200',
-  medium: 'bg-amber-50 text-amber-900 border-amber-200',
-  low: 'bg-rose-50 text-rose-900 border-rose-200',
-}
-
 export const importanceLabels: Record<RequirementImportance, string> = {
   required: 'Obligatorio',
   preferred: 'Deseable',

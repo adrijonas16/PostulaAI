@@ -58,6 +58,7 @@ describe('CV import', () => {
     renderApp('/app/perfil')
 
     await user.upload(await screen.findByLabelText('Archivo del CV'), cvFile())
+    expect(screen.getByText('mi-cv.pdf')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Importar CV' }))
 
     expect(await screen.findByDisplayValue('Laura Gómez')).toBeInTheDocument()
@@ -65,12 +66,15 @@ describe('CV import', () => {
     expect(saves).toBe(0)
     expect(screen.getByText(/aún no se ha guardado/i)).toBeInTheDocument()
     expect(screen.getByText(/«Kubernetes»/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/habilidades técnicas/i)).toHaveValue('C#, PostgreSQL')
-
+    // The first section with missing data opens by itself.
+    await waitFor(() => expect(screen.getByRole('tab', { name: /experiencia/i })).toHaveAttribute('aria-selected', 'true'))
     const experience = screen.getByRole('group', { name: 'Experiencia 1' })
     expect(within(experience).getByLabelText(/tecnologías usadas/i)).toHaveValue('C#, PostgreSQL')
     // Missing data is flagged instead of guessed.
     await waitFor(() => expect(within(experience).getByLabelText(/inicio/i)).toHaveAttribute('aria-invalid', 'true'))
+    await user.click(screen.getByRole('tab', { name: /habilidades/i }))
+    const skills = screen.getByRole('list', { name: 'Habilidades técnicas agregadas' })
+    expect(within(skills).getAllByRole('listitem')).toHaveLength(2)
     const language = screen.getByRole('group', { name: 'Idioma 1' })
     expect(within(language).getByLabelText('Nivel')).toHaveValue('')
     expect(within(language).getByText('Elige el nivel.', { selector: 'p' })).toBeInTheDocument()
@@ -84,7 +88,7 @@ describe('CV import', () => {
     await user.upload(await screen.findByLabelText('Archivo del CV'), new File(['texto'], 'cv.txt', { type: 'text/plain' }))
 
     expect(screen.getByRole('alert')).toHaveTextContent(/pdf o word/i)
-    expect(screen.getByRole('button', { name: 'Importar CV' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Importar CV' })).not.toBeInTheDocument()
   })
 
   it('explains server errors such as scanned PDFs', async () => {

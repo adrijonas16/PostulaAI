@@ -18,16 +18,25 @@ function withProfile(profile: typeof sampleProfile | null) {
 
 describe('ProfilePage', () => {
   it('prefills the form with the saved profile', async () => {
+    const user = userEvent.setup()
     withProfile(sampleProfile)
     renderApp('/app/perfil')
 
     expect(await screen.findByDisplayValue('Laura Gómez')).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: /experiencia/i }))
     const experience = screen.getByRole('group', { name: 'Experiencia 1' })
+    // Saved items start collapsed to one line and open on click.
+    const toggle = within(experience).getByRole('button', { name: /en empresa ficticia s\.a\./i })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await user.click(toggle)
+    expect(within(experience).getByLabelText(/empresa/i)).toBeVisible()
     expect(within(experience).getByLabelText(/empresa/i)).toHaveValue('Empresa Ficticia S.A.')
     expect(within(experience).getByLabelText(/es mi empleo actual/i)).toBeChecked()
     expect(within(experience).getByLabelText(/^fin/i)).toBeDisabled()
     expect(within(experience).getByLabelText(/tecnologías usadas/i)).toHaveValue('C#, PostgreSQL')
-    expect(screen.getByLabelText(/habilidades técnicas/i)).toHaveValue('C#, SQL')
+    await user.click(screen.getByRole('tab', { name: /habilidades/i }))
+    const skills = screen.getByRole('list', { name: 'Habilidades técnicas agregadas' })
+    expect(within(skills).getAllByRole('listitem').map((item) => item.firstChild?.textContent)).toEqual(['C#', 'SQL'])
   })
 
   it('creates a profile from an empty form and sends the API contract', async () => {
@@ -43,6 +52,7 @@ describe('ProfilePage', () => {
     renderApp('/app/perfil')
 
     await user.type(await screen.findByLabelText(/nombre profesional/i), 'Laura Gómez')
+    await user.click(screen.getByRole('tab', { name: /experiencia/i }))
     await user.click(screen.getByRole('button', { name: /agregar experiencia/i }))
     const experience = screen.getByRole('group', { name: 'Experiencia 1' })
     await user.type(within(experience).getByLabelText(/empresa/i), 'Empresa Ficticia')
@@ -50,6 +60,8 @@ describe('ProfilePage', () => {
     await user.type(within(experience).getByLabelText(/inicio/i), '2021-05')
     await user.click(within(experience).getByLabelText(/es mi empleo actual/i))
     await user.type(within(experience).getByLabelText(/tecnologías usadas/i), 'Python, SQL')
+    await user.click(screen.getByRole('tab', { name: /habilidades/i }))
+    // Comma or Enter adds a chip; the duplicate is skipped and the last one is added when leaving the field.
     await user.type(screen.getByLabelText(/habilidades técnicas/i), 'Python, python, Excel')
     await user.click(screen.getByRole('button', { name: /guardar perfil/i }))
 
@@ -78,10 +90,14 @@ describe('ProfilePage', () => {
     )
     renderApp('/app/perfil')
 
-    await user.click(await screen.findByRole('button', { name: /agregar experiencia/i }))
+    await user.click(await screen.findByRole('tab', { name: /experiencia/i }))
+    await user.click(screen.getByRole('button', { name: /agregar experiencia/i }))
     await user.click(screen.getByRole('button', { name: /guardar perfil/i }))
 
-    expect(await screen.findByText('Ingresa tu nombre profesional.')).toBeInTheDocument()
+    // The first section with errors opens, and every section with errors is flagged.
+    expect(await screen.findByText('Ingresa tu nombre profesional.')).toBeVisible()
+    expect(screen.getByRole('tab', { name: /datos/i })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /experiencia/i })).toHaveAccessibleName(/tiene errores/i)
     expect(screen.getByText('Ingresa la empresa.')).toBeInTheDocument()
     expect(screen.getByText('Indica la fecha de fin o marca que es tu empleo actual.')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent(/revisa los campos/i)
@@ -103,6 +119,8 @@ describe('ProfilePage', () => {
     await screen.findByDisplayValue('Laura Gómez')
     await user.click(screen.getByRole('button', { name: /guardar perfil/i }))
 
+    // The section with the server error opens by itself.
+    await waitFor(() => expect(screen.getByRole('tab', { name: /experiencia/i })).toHaveAttribute('aria-selected', 'true'))
     const experience = screen.getByRole('group', { name: 'Experiencia 1' })
     await waitFor(() =>
       expect(within(experience).getByLabelText(/inicio/i)).toHaveAccessibleDescription('La fecha de inicio no puede estar en el futuro.'),
@@ -116,6 +134,7 @@ describe('ProfilePage', () => {
     renderApp('/app/perfil')
 
     await screen.findByDisplayValue('Laura Gómez')
+    await user.click(screen.getByRole('tab', { name: /experiencia/i }))
     await user.click(screen.getByRole('button', { name: /eliminar experiencia 1/i }))
 
     expect(screen.queryByRole('group', { name: 'Experiencia 1' })).not.toBeInTheDocument()

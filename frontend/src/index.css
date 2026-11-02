@@ -1,26 +1,115 @@
 @import 'tailwindcss';
 
-/* Design tokens: calm, professional palette. One accent, neutral ink, no "chatbot" look. */
+/*
+  PostulaAI visual language: preparing an application on paper.
+  - paper/sheet: neutral cool paper, white sheets
+  - pen (blue ballpoint): actions and navigation
+  - marker (yellow highlighter): what your profile proves
+  - redpen (correction pen): what is missing
+  Typeface: Atkinson Hyperlegible Next, designed for legibility (self-hosted, no third-party requests).
+  Legacy token names (accent, surface, canvas, line, ink-muted) map to the same palette.
+*/
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --color-ink: #16202a;
-  --color-ink-muted: #4a5866;
-  --color-surface: #ffffff;
-  --color-canvas: #f5f6f4;
-  --color-line: #dfe3e0;
-  --color-accent: #0f5f5a;
-  --color-accent-strong: #0a4743;
-  --color-accent-soft: #e3f0ee;
+  --font-sans: 'Atkinson Hyperlegible Next Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-paper: #f2f3ef;
+  --color-sheet: #ffffff;
+  --color-ink: #1d2433;
+  --color-graphite: #5b6472;
+  --color-rule: #d9dcd3;
+
+  --color-pen: #2340a8;
+  --color-pen-strong: #1a3087;
+  --color-pen-soft: #e6ebfa;
+
+  --color-marker: #f7e46b;
+  --color-marker-soft: #fbf3bc;
+
+  --color-redpen: #c2362b;
+  --color-redpen-soft: #fbe7e4;
+
+  --color-canvas: var(--color-paper);
+  --color-surface: var(--color-sheet);
+  --color-line: var(--color-rule);
+  --color-ink-muted: var(--color-graphite);
+  --color-accent: var(--color-pen);
+  --color-accent-strong: var(--color-pen-strong);
+  --color-accent-soft: var(--color-pen-soft);
+
+  --radius-field: 6px;
+  --radius-sheet: 12px;
 }
 
 html {
   color: var(--color-ink);
-  background: var(--color-canvas);
+  background: var(--color-paper);
   font-family: var(--font-sans);
+  font-size: 100%;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-pen);
   outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Highlighter stroke behind text: evidence the profile proves. */
+.marker {
+  background-image: linear-gradient(transparent 52%, var(--color-marker) 52%, var(--color-marker) 92%, transparent 92%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 0.15em;
+}
+
+/* Correction-pen underline: something missing. */
+.redline {
+  text-decoration: underline wavy var(--color-redpen);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+}
+
+/* A single, user-triggered reveal used for expandable rows. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  animation: reveal 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
 }

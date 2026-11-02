@@ -85,10 +85,10 @@ export function JobPostingEditorPage() {
     const notFound = postingQuery.error instanceof ApiError && postingQuery.error.status === 404
     return (
       <section className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-3xl font-bold">{title}</h1>
         <div className="mt-6 space-y-4">
           <Alert tone="error">{notFound ? 'No encontramos esa vacante.' : 'No pudimos cargar la vacante. Intenta de nuevo.'}</Alert>
-          <Link to="/app/vacantes" className="text-sm font-medium text-accent underline">
+          <Link to="/app/vacantes" className="text-sm font-semibold text-pen underline">
             Volver a mis vacantes
           </Link>
         </div>
@@ -98,12 +98,12 @@ export function JobPostingEditorPage() {
 
   return (
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-3xl">
-      <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
+      <h1 id="page-title" className="text-3xl font-bold">
         {title}
       </h1>
-      <p className="mt-2 text-ink-muted">Pega la oferta tal como la publicó la empresa. El análisis compara tu perfil con este texto.</p>
+      <p className="mt-2 text-graphite">Pega la oferta tal como la publicó la empresa. El análisis compara tu perfil con este texto.</p>
 
-      <form noValidate onSubmit={onSubmit} className="mt-8 space-y-5 rounded-lg border border-line bg-surface p-5">
+      <form noValidate onSubmit={onSubmit} className="mt-8 space-y-5 rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5">
         {formError !== null && <Alert tone="error">{formError}</Alert>}
         <TextField label="Título del cargo" required error={errors.title?.message} {...register('title')} />
         <div className="grid gap-4 md:grid-cols-2">
@@ -126,7 +126,7 @@ export function JobPostingEditorPage() {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Guardando…' : 'Guardar vacante'}
           </Button>
-          <Link to="/app/vacantes" className="inline-flex items-center rounded-md px-4 py-2 text-sm text-ink-muted hover:text-ink">
+          <Link to="/app/vacantes" className="inline-flex items-center rounded-[var(--radius-field)] px-4 py-2 text-sm text-graphite hover:text-ink">
             Cancelar
           </Link>
         </div>

@@ -36,7 +36,8 @@ describe('run analysis', () => {
     )
     const { router } = renderApp(`/app/analisis/nuevo?vacante=${postingSummary(2).id}`)
 
-    expect(await screen.findByLabelText('Vacante')).toHaveValue(postingSummary(2).id)
+    expect(await screen.findByRole('radio', { name: new RegExp(postingSummary(2).title) })).toBeChecked()
+    expect(screen.getByRole('radio', { name: new RegExp(postingSummary(1).title) })).not.toBeChecked()
     expect(await screen.findByText(/te quedan/i)).toHaveTextContent('Te quedan 10 de 10 análisis')
     await user.click(screen.getByRole('button', { name: /analizar compatibilidad/i }))
 
@@ -71,6 +72,7 @@ describe('run analysis', () => {
 
 describe('analysis result', () => {
   it('shows the band with requirement counts, never a bare percentage, plus every section and the disclaimer', async () => {
+    const user = userEvent.setup()
     withAuthenticatedSession()
     server.use(http.get(api(`/analyses/${sampleAnalysis.id}`), () => HttpResponse.json(sampleAnalysis)))
     renderApp(`/app/analisis/${sampleAnalysis.id}`)
@@ -78,17 +80,33 @@ describe('analysis result', () => {
     const score = await screen.findByRole('region', { name: 'Compatibilidad alta' })
     expect(within(score).getByText(/78\/100/)).toBeInTheDocument()
     expect(within(score).getByText(/es una estimación/i)).toBeInTheDocument()
-    expect(within(score).getByText('1 cumplidos · 0 por trabajar')).toBeInTheDocument()
+    expect(within(score).getByText(/1 de 1 requisitos obligatorios y 0 de 1 deseables cumplidos/)).toBeInTheDocument()
 
-    const strengths = screen.getByRole('region', { name: /fortalezas/i })
-    expect(within(strengths).getByText(/evidencia en tu perfil: desarrolladora backend/i)).toBeInTheDocument()
-    expect(within(strengths).getByText('Obligatorio')).toBeInTheDocument()
+    const map = screen.getByRole('region', { name: 'Requisitos de la vacante' })
+    const rows = within(map).getAllByRole('button', { expanded: false })
+    expect(rows).toHaveLength(2)
+    // Required requirements come first; each row opens to show evidence or a recommendation.
+    expect(rows[0]).toHaveTextContent(/lo tienes/i)
+    expect(rows[0]).toHaveTextContent('Obligatorio')
+    expect(rows[1]).toHaveTextContent(/te falta/i)
+    expect(rows[1]).toHaveTextContent('Habilidad faltante')
+    expect(within(map).queryByText(/evidencia en tu perfil:/i)).not.toBeVisible()
+    await user.click(rows[0] as HTMLElement)
+    expect(within(map).getByText(/evidencia en tu perfil:/i)).toBeVisible()
 
-    const gaps = screen.getByRole('region', { name: /brechas/i })
-    expect(within(gaps).getByText('Habilidad faltante')).toBeInTheDocument()
-    expect(within(gaps).getByText('Deseable')).toBeInTheDocument()
+    await user.click(within(map).getByRole('radio', { name: /te falta/i }))
+    expect(within(map).getAllByRole('button')).toHaveLength(1)
 
     expect(within(screen.getByRole('list', { name: 'Palabras clave' })).getAllByRole('listitem')).toHaveLength(2)
+    const checklist = screen.getByRole('region', { name: 'Ajustes para tu CV' })
+    await user.click(within(checklist).getAllByRole('checkbox')[0] as HTMLElement)
+    expect(within(checklist).getByText(/^1 de \d+ hechos$/)).toBeInTheDocument()
+
+    const letter = screen.getByRole('region', { name: /carta de presentación/i })
+    await user.type(within(letter).getByRole('textbox'), ' Gracias.')
+    await user.click(within(letter).getByRole('button', { name: /volver al texto original/i }))
+    expect(within(letter).getByRole('textbox')).toHaveValue(sampleAnalysis.result?.coverLetterDraft)
+
     expect(screen.getByRole('button', { name: /copiar resumen profesional/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /copiar carta de presentación/i })).toBeInTheDocument()
     expect(screen.getByRole('complementary', { name: /aviso de transparencia/i })).toHaveTextContent(/no garantiza contratación/i)
@@ -102,7 +120,7 @@ describe('analysis result', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/no guardamos nada incompleto/i)
     expect(screen.getByRole('link', { name: /intentar de nuevo/i })).toHaveAttribute('href', `/app/analisis/nuevo?vacante=${sampleAnalysis.jobPostingId}`)
-    expect(screen.queryByRole('region', { name: /fortalezas/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Requisitos de la vacante' })).not.toBeInTheDocument()
   })
 
   it('shows not found for analyses of other users', async () => {

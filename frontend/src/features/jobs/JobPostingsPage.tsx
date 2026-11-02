@@ -4,7 +4,7 @@ import { Link, useLocation, useSearchParams } from 'react-router'
 import type { JobPostingSummary } from '../../shared/api/types'
 import { formatDate } from '../../shared/lib/formatDate'
 import { Alert } from '../../shared/ui/Alert'
-import { Button } from '../../shared/ui/Button'
+import { Button, primaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
 import { workModeLabels } from './jobPostingForm'
 import { deleteJobPosting, JOB_POSTINGS_PAGE_SIZE, jobPostingKeys, listJobPostings } from './jobsApi'
@@ -62,12 +62,12 @@ export function JobPostingsPage() {
     <section aria-labelledby="page-title" className="mx-auto w-full max-w-4xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 id="page-title" className="text-2xl font-semibold tracking-tight">
+          <h1 id="page-title" className="text-3xl font-bold">
             Mis vacantes
           </h1>
-          <p className="mt-2 text-ink-muted">Las ofertas que guardaste para analizar.</p>
+          <p className="mt-2 text-graphite">Las ofertas que guardaste para analizar.</p>
         </div>
-        <Link to="/app/vacantes/nueva" className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong">
+        <Link to="/app/vacantes/nueva" className={primaryLinkClass}>
           Nueva vacante
         </Link>
       </div>
@@ -84,7 +84,7 @@ export function JobPostingsPage() {
           onChange={(event) => setSearchDraft(event.target.value)}
           placeholder="Buscar por cargo o empresa"
           maxLength={100}
-          className="block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"
+          className="block w-full rounded-[var(--radius-field)] border border-rule bg-sheet px-3 py-2 text-[0.95rem] focus:border-pen focus:outline-none focus:ring-2 focus:ring-pen-soft"
         />
         <Button type="submit" variant="secondary">
           Buscar
@@ -98,11 +98,11 @@ export function JobPostingsPage() {
       {listQuery.isError && <Alert tone="error">No pudimos cargar tus vacantes. Recarga la página para intentarlo de nuevo.</Alert>}
 
       {data !== undefined && data.items.length === 0 && (
-        <div className="mt-6 rounded-lg border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-muted">
+        <div className="mt-6 rounded-[var(--radius-sheet)] border-2 border-dashed border-rule bg-sheet p-8 text-center text-sm text-graphite">
           {search === '' ? (
             <>
               Aún no has guardado vacantes.{' '}
-              <Link to="/app/vacantes/nueva" className="font-medium text-accent underline">
+              <Link to="/app/vacantes/nueva" className="font-semibold text-pen underline">
                 Agrega la primera
               </Link>
               .
@@ -115,7 +115,7 @@ export function JobPostingsPage() {
 
       {data !== undefined && data.items.length > 0 && (
         <>
-          <ul aria-label="Vacantes guardadas" className="mt-6 divide-y divide-line rounded-lg border border-line bg-surface">
+          <ul aria-label="Vacantes guardadas" className="mt-6 divide-y divide-rule rounded-[var(--radius-sheet)] border border-rule bg-sheet">
             {data.items.map((posting) => (
               <JobPostingRow
                 key={posting.id}
@@ -135,8 +135,8 @@ export function JobPostingsPage() {
             <Button variant="secondary" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
               Anterior
             </Button>
-            <span className="text-ink-muted">
-              Página {page} de {totalPages} · {data.totalCount} {data.totalCount === 1 ? 'vacante' : 'vacantes'}
+            <span className="text-graphite">
+              Página {page} de {totalPages} ({data.totalCount} {data.totalCount === 1 ? 'vacante' : 'vacantes'})
             </span>
             <Button variant="secondary" disabled={page >= totalPages} onClick={() => goToPage(page + 1)}>
               Siguiente
@@ -162,10 +162,9 @@ function JobPostingRow({ posting, confirming, deleting, onAskDelete, onCancelDel
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 p-4">
       <div className="min-w-0">
-        <h2 className="truncate font-medium">{posting.title}</h2>
-        <p className="mt-1 text-sm text-ink-muted">
-          {details.join(' · ')} · Guardada el {formatDate(posting.createdAt)}
-        </p>
+        <h2 className="truncate font-semibold">{posting.title}</h2>
+        {details.length > 0 && <p className="mt-1 text-sm text-graphite">{details.join(', ')}</p>}
+        <p className="mt-0.5 text-xs text-graphite">Guardada el {formatDate(posting.createdAt)}</p>
       </div>
       {confirming ? (
         <fieldset className="flex items-center gap-2 text-sm">
@@ -183,18 +182,18 @@ function JobPostingRow({ posting, confirming, deleting, onAskDelete, onCancelDel
           <Link
             to={`/app/analisis/nuevo?vacante=${posting.id}`}
             aria-label={`Analizar ${posting.title}`}
-            className="rounded-md px-3 py-2 text-sm font-medium text-accent hover:bg-accent-soft"
+            className={primaryLinkClass}
           >
             Analizar
           </Link>
           <Link
             to={`/app/vacantes/${posting.id}/editar`}
             aria-label={`Editar ${posting.title}`}
-            className="rounded-md px-3 py-2 text-sm font-medium text-accent hover:bg-accent-soft"
+            className="rounded-[var(--radius-field)] px-3 py-2 text-sm font-semibold text-pen hover:bg-pen-soft"
           >
             Editar
           </Link>
-          <Button variant="danger" aria-label={`Eliminar ${posting.title}`} onClick={onAskDelete}>
+          <Button variant="ghost" aria-label={`Eliminar ${posting.title}`} onClick={onAskDelete}>
             Eliminar
           </Button>
         </div>

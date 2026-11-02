@@ -55,7 +55,7 @@ describe('authenticated routes', () => {
     renderApp('/app/perfil')
 
     const navigation = await screen.findByRole('navigation', { name: /principal/i })
-    expect(within(navigation).getByRole('link', { name: 'Perfil profesional' })).toHaveAttribute('aria-current', 'page')
+    expect(within(navigation).getByRole('link', { name: /^tu perfil/i })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByText('laura@example.test')).toBeInTheDocument()
   })
 })
