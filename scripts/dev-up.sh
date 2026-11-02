@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Levanta PostulaAI en local con Docker (macOS/Linux). Crea .env con secretos aleatorios si no existe.
+# Uso: ./scripts/dev-up.sh [--watch]   (--watch: recarga automática desde el código)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -16,15 +17,29 @@ if [ ! -f .env ]; then
   echo "Se creó .env con secretos aleatorios locales."
 fi
 
-docker compose up -d --build
+env_value() { grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d '[:space:]'; }
+api_port=$(env_value API_HOST_PORT); api_port=${api_port:-58080}
+web_port=$(env_value WEB_HOST_PORT); web_port=${web_port:-5173}
 
-for _ in $(seq 1 60); do
-  if curl -fsS http://localhost:8080/health/ready >/dev/null 2>&1; then
-    echo "PostulaAI está listo: http://localhost:5173"
+compose_file=docker-compose.yml
+attempts=60
+docker compose -f docker-compose.yml stop >/dev/null 2>&1 || true
+docker compose -f docker-compose.watch.yml stop >/dev/null 2>&1 || true
+if [ "${1:-}" = "--watch" ]; then
+  compose_file=docker-compose.watch.yml
+  attempts=200
+  docker compose -f "$compose_file" up -d --remove-orphans
+else
+  docker compose -f "$compose_file" up -d --build --remove-orphans
+fi
+
+for _ in $(seq 1 "$attempts"); do
+  if curl -fsS "http://localhost:${api_port}/health/ready" >/dev/null 2>&1; then
+    echo "PostulaAI está listo: http://localhost:${web_port}"
     exit 0
   fi
   sleep 3
 done
 echo "La API no respondió a tiempo. Últimos logs:" >&2
-docker compose logs --tail 60 api
+docker compose -f "$compose_file" logs --tail 60 api
 exit 1

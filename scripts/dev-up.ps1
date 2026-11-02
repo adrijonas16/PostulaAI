@@ -4,8 +4,12 @@
   - Crea .env con secretos aleatorios si no existe (nunca se sube a Git).
   - Comprueba que los puertos estén libres y dice qué programa los ocupa.
   - Construye y arranca postgres + api + frontend y espera a que la API esté lista.
-  Uso: powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1
+  - Con -Watch arranca en modo recarga automática: la app se ejecuta desde el código y
+    cualquier cambio (una edición o un git pull) se ve sin reconstruir nada.
+  Uso: powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1 [-Watch]
 #>
+param([switch]$Watch)
+
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 
@@ -62,9 +66,12 @@ $ports = [ordered]@{
   'POSTGRES_HOST_PORT' = [int](Get-EnvValue 'POSTGRES_HOST_PORT' '55432')
 }
 
-# Stop our own containers first so their ports do not count as "in use".
+$composeFile = if ($Watch) { 'docker-compose.watch.yml' } else { 'docker-compose.yml' }
+
+# Stop our own containers (from either mode) first so their ports do not count as "in use".
 $ErrorActionPreference = 'Continue'
-docker compose stop 2>&1 | Out-Null
+docker compose -f docker-compose.yml stop 2>&1 | Out-Null
+docker compose -f docker-compose.watch.yml stop 2>&1 | Out-Null
 $ErrorActionPreference = $previousPreference
 
 $conflicts = @()
@@ -86,8 +93,13 @@ if ($conflicts.Count -gt 0) {
   exit 1
 }
 
-Write-Host 'Construyendo y levantando contenedores (la primera vez tarda varios minutos)...'
-docker compose up -d --build
+if ($Watch) {
+  Write-Host 'Levantando en modo recarga automática (la primera vez descarga dependencias y compila; puede tardar varios minutos)...'
+  docker compose -f $composeFile up -d --remove-orphans
+} else {
+  Write-Host 'Construyendo y levantando contenedores (la primera vez tarda varios minutos)...'
+  docker compose -f $composeFile up -d --build --remove-orphans
+}
 if ($LASTEXITCODE -ne 0) {
   Write-Problem 'docker compose falló. Revisa el mensaje anterior.'
   exit 1
@@ -96,7 +108,7 @@ if ($LASTEXITCODE -ne 0) {
 $apiPort = $ports['API_HOST_PORT']
 $webPort = $ports['WEB_HOST_PORT']
 Write-Host 'Esperando a que la API y la base de datos estén listas...'
-$deadline = (Get-Date).AddSeconds(180)
+$deadline = (Get-Date).AddSeconds($(if ($Watch) { 600 } else { 180 }))
 $ready = $false
 while ((Get-Date) -lt $deadline) {
   try {
@@ -107,8 +119,8 @@ while ((Get-Date) -lt $deadline) {
 
 if (-not $ready) {
   Write-Problem 'La API no respondió a tiempo. Estado y últimos logs:'
-  docker compose ps -a
-  docker compose logs --tail 60 api
+  docker compose -f $composeFile ps -a
+  docker compose -f $composeFile logs --tail 60 api
   exit 1
 }
 
@@ -120,4 +132,9 @@ Write-Host "  Swagger:  http://localhost:$apiPort/swagger"
 if ((Get-EnvValue 'ANTHROPIC_API_KEY' '') -eq '') {
   Write-Host '  Nota: ANTHROPIC_API_KEY está vacía; el análisis con IA responderá "no configurado".' -ForegroundColor Yellow
 }
-Write-Host 'Para detenerlo: docker compose down'
+if ($Watch) {
+  Write-Host '  Modo recarga automática: los cambios en el código se aplican solos.' -ForegroundColor Green
+  Write-Host '  La página se actualiza al instante; la API se reinicia sola en unos segundos.'
+  Write-Host "Para ver los logs: docker compose -f $composeFile logs -f api frontend"
+}
+Write-Host "Para detenerlo: docker compose -f $composeFile down"
