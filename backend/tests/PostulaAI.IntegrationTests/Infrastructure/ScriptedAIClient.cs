@@ -41,12 +41,30 @@ public sealed class ScriptedAIClient : IAIClient
 
     public void Reset() => queue.Clear();
 
+    public static CvExtraction CvExtraction() => new(
+        "Laura Gómez",
+        "Desarrolladora backend",
+        null,
+        new CvLinks("linkedin.com/in/laura", null, null),
+        [new CvExperience("Empresa Ficticia S.A.", "Desarrolladora backend", "Bogotá", "2022-03", null, true, null, ["Reduje la latencia un 30 %"], ["C#", "Kubernetes"])],
+        [new CvEducation("Universidad Ejemplo", "Ingeniería de Sistemas", null, "2015-02-01", "2020-12-01", CvEducationStatus.Completed)],
+        [],
+        [],
+        ["C#", "PostgreSQL", "Terraform"],
+        [],
+        [new CvLanguage("Inglés", null)]);
+
     public Task<AICompletionResult> CompleteAsync(AICompletionRequest request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         Calls++;
+        var isCvExtraction = request.OutputJsonSchema?.Contains("\"technicalSkills\"", StringComparison.Ordinal) == true;
+        var fallback = isCvExtraction
+            ? System.Text.Json.JsonSerializer.Serialize(CvExtraction(), JobAnalysisJson.Options)
+            : JobAnalysisJson.Serialize(ValidResult());
         var next = queue.TryDequeue(out var scripted)
             ? scripted
-            : () => new AICompletionResult(JobAnalysisJson.Serialize(ValidResult()), Model, 1200, 800, TimeSpan.FromMilliseconds(1500), "end_turn");
+            : () => new AICompletionResult(fallback, Model, 1200, 800, TimeSpan.FromMilliseconds(1500), "end_turn");
         return Task.FromResult(next());
     }
 }
