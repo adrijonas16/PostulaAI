@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PostulaAI.AI/PostulaAI.AI.csproj" />
+    <Project Path="src/PostulaAI.Api/PostulaAI.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PostulaAI.IntegrationTests/PostulaAI.IntegrationTests.csproj" />
+    <Project Path="tests/PostulaAI.UnitTests/PostulaAI.UnitTests.csproj" />
+  </Folder>
+</Solution>
