@@ -1,6 +1,6 @@
 # Seguridad
 
-> Estado: **Fase 0**. Lo implementado se indica con ✅; lo demás está planificado.
+> Estado: **Fase 1**. Lo implementado se indica con ✅; lo demás está planificado.
 
 ## Secretos
 
@@ -9,7 +9,7 @@
 - La API key de Claude, la clave de firma JWT y la cadena de conexión solo existen en variables de entorno o en el gestor de secretos del despliegue.
 - Si un secreto llega al repositorio, se **rota** de inmediato. Reescribir el historial no basta.
 
-## Autenticación *(Fase 1)*
+## Autenticación ✅ *(Fase 1)*
 
 | Elemento | Decisión |
 |---|---|
@@ -18,13 +18,16 @@
 | Refresh token | Aleatorio de 256 bits. Solo se guarda su hash. Se envía en cookie `HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth` y se rota en cada uso |
 | Reutilización | Si se presenta un refresh token ya rotado, se revoca toda su familia |
 | Fuerza bruta | Rate limiting por IP y por cuenta en `/auth/*` |
-| Errores | Mensaje genérico ("credenciales inválidas") sin revelar si el correo existe |
+| Errores | Mensaje genérico ("credenciales inválidas") sin revelar si el correo existe; con un correo inexistente se calcula igualmente un hash para no delatarlo por tiempo de respuesta |
+| Registro | Responde `409` si el correo ya existe. Esto permite enumerar correos; es un compromiso aceptado en v1, mitigado por el rate limiting |
+| Configuración | La API no arranca sin `Jwt:SigningKey` de al menos 32 bytes (validación al inicio) |
+| Frontend | El access token nunca se guarda en `localStorage` ni `sessionStorage` (hay una prueba que lo verifica) |
 
 ## Autorización
 
-- Cada recurso pertenece a un `UserId`. Los servicios reciben el `UserId` del token y filtran por él.
-- Un recurso ajeno responde `404`.
-- Cada módulo tendrá pruebas de integración A/B.
+- ✅ Cada recurso pertenece a un `UserId`. Los servicios reciben el `UserId` del token y filtran por él.
+- ✅ El perfil solo es accesible por `/profiles/me`: no existe ruta para leer el de otro usuario. Una prueba de integración A/B lo verifica.
+- Recursos con identificador (vacantes, análisis): un recurso ajeno responde `404` *(Fases 2 y 3)*.
 
 ## Datos personales
 
@@ -39,7 +42,7 @@
 Reglas:
 
 - **No se registran en logs**: contenido de perfiles, vacantes, prompts ni respuestas del modelo. Solo identificadores, códigos de error, latencias, tokens y versiones.
-- Los audit logs no contienen contenido personal.
+- ✅ Los audit logs no contienen contenido personal: solo la acción, los identificadores, el `traceId` y la fecha. Acciones registradas: registro, login correcto y fallido, reutilización de refresh token, logout y actualización de perfil.
 - Los datos se envían al proveedor de IA únicamente para ejecutar el análisis que el usuario solicita. No se usan para entrenar modelos ni se venden o comparten con terceros.
 - **Eliminación de cuenta** *(roadmap)*: `DELETE /api/v1/users/me` borrará en cascada perfil, vacantes, análisis y tokens, y anonimizará los audit logs (`UserId` → null).
 

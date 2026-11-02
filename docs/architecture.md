@@ -1,6 +1,6 @@
 # Arquitectura
 
-> Estado: **Fase 0**. Este documento describe la arquitectura objetivo del MVP. Lo que aún no existe en código está marcado como *(pendiente — Fase N)*.
+> Estado: **Fase 1**. Este documento describe la arquitectura objetivo del MVP. Lo que aún no existe en código está marcado como *(pendiente — Fase N)*.
 
 ## Vista general
 
@@ -46,7 +46,9 @@ backend/
 
 Implementado en Fase 0: host, ProblemDetails, manejador global de excepciones, `AppDbContext` vacío, health checks (`/health/live`, `/health/ready`), OpenAPI + Swagger UI en desarrollo, CORS configurable, contrato preliminar de `IAIClient`, prueba de arquitectura y pruebas de los endpoints de salud.
 
-## Modelo de datos *(pendiente — Fases 1 a 3)*
+## Modelo de datos
+
+Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). `JobPosting` y `Analysis`: *pendiente — Fases 2 y 3*.
 
 ```text
 User 1──* RefreshToken
@@ -72,7 +74,7 @@ User 1──* AuditLog
 | `Analysis` | Id, UserId, ProfileId?, JobPostingId?, Status (`pending` \| `completed` \| `failed`), CompatibilityScore?, ResultJson? (jsonb, solo si es válido), ProfileSnapshot (jsonb), JobPostingSnapshot (jsonb), PromptId, PromptVersion, Model, Language, InputTokens, OutputTokens, LatencyMs, RepairAttempted, ErrorCode?, CreatedAt, CompletedAt? |
 | `AuditLog` | Id, UserId?, Action, EntityType, EntityId?, CorrelationId, Metadata (jsonb, sin datos personales), OccurredAt |
 
-En v1 la interfaz maneja un perfil por usuario; el modelo admite varios. Los límites de uso se calculan contando intentos de `Analysis` por usuario en una ventana configurable, sin tabla adicional.
+En v1 hay **un perfil por usuario**, garantizado con un índice único en `professional_profiles.UserId`; admitir varios en el futuro solo requiere una migración que elimine ese índice. Las listas de tecnologías y logros se guardan como `text[]`, y los enums como texto. Los límites de uso se calculan contando intentos de `Analysis` por usuario en una ventana configurable, sin tabla adicional.
 
 ## Endpoints
 
@@ -83,12 +85,12 @@ Todos bajo `/api/v1`, salvo salud. Errores en formato ProblemDetails con `errorC
 | GET | `/health/live` | Proceso activo | ✅ Fase 0 |
 | GET | `/health/ready` | Base de datos accesible | ✅ Fase 0 |
 | GET | `/openapi/v1.json` | Documento OpenAPI (solo desarrollo) | ✅ Fase 0 |
-| POST | `/auth/register` | Registro | Fase 1 |
-| POST | `/auth/login` | Inicio de sesión → access token + cookie de refresh | Fase 1 |
-| POST | `/auth/refresh` | Rota el refresh token | Fase 1 |
-| POST | `/auth/logout` | Revoca la familia de tokens | Fase 1 |
-| GET | `/auth/me` | Usuario actual | Fase 1 |
-| GET / PUT | `/profiles/me` | Leer / reemplazar el perfil completo | Fase 1 |
+| POST | `/auth/register` | Registro | ✅ Fase 1 |
+| POST | `/auth/login` | Inicio de sesión → access token + cookie de refresh | ✅ Fase 1 |
+| POST | `/auth/refresh` | Rota el refresh token | ✅ Fase 1 |
+| POST | `/auth/logout` | Revoca la familia de tokens | ✅ Fase 1 |
+| GET | `/auth/me` | Usuario actual | ✅ Fase 1 |
+| GET / PUT | `/profiles/me` | Leer / reemplazar el perfil completo | ✅ Fase 1 |
 | GET / POST | `/job-postings` | Listar (paginado) / crear | Fase 2 |
 | GET / PUT / DELETE | `/job-postings/{id}` | Detalle / editar / eliminar | Fase 2 |
 | POST | `/analyses` | Ejecutar análisis `{ jobPostingId, language }` | Fase 3 |
@@ -104,12 +106,14 @@ Todos bajo `/api/v1`, salvo salud. Errores en formato ProblemDetails con `errorC
 frontend/src/
   app/        rutas, layouts (público y de aplicación), página 404
   features/   landing · auth · dashboard · profile · jobs · analyses · settings
-  shared/     ui/ (componentes base) · api/ (cliente HTTP tipado, Fase 1)
+  shared/     ui/ (componentes accesibles) · api/ (cliente HTTP tipado, sesión en memoria) · lib/
 ```
 
 Rutas: `/`, `/iniciar-sesion`, `/registro`, `/app`, `/app/perfil`, `/app/vacantes/nueva`, `/app/vacantes/:id/editar`, `/app/analisis/nuevo`, `/app/analisis`, `/app/analisis/:id`, `/app/configuracion`.
 
-Herramientas: React 19, React Router, Tailwind CSS 4, TypeScript estricto, oxlint, Vitest + Testing Library. Se añadirán TanStack Query, react-hook-form y zod cuando se usen (Fase 1).
+Herramientas: React 19, React Router, TanStack Query, react-hook-form + zod, Tailwind CSS 4, TypeScript estricto, oxlint, Vitest + Testing Library + MSW.
+
+Sesión en el frontend: el access token vive solo en memoria; al cargar la app se restaura llamando a `/auth/refresh` (la cookie `HttpOnly` la envía el navegador). Las renovaciones son de un solo vuelo para no disparar la detección de reutilización. Las rutas `/app/*` están protegidas por `RequireAuth`.
 
 ## Despliegue
 
