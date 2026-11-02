@@ -129,3 +129,79 @@ export interface PagedResponse<T> {
   pageSize: number
   totalCount: number
 }
+
+export type AnalysisStatus = 'pending' | 'completed' | 'failed'
+export type RequirementImportance = 'required' | 'preferred'
+export type GapType = 'missing_skill' | 'missing_experience' | 'unclear_evidence' | 'other'
+export type ScoreBand = 'high' | 'medium' | 'low'
+
+export interface AnalysisStrength {
+  requirement: string
+  evidence: string
+  importance: RequirementImportance
+}
+
+export interface AnalysisGap {
+  requirement: string
+  gapType: GapType
+  importance: RequirementImportance
+  recommendation: string
+}
+
+export interface JobAnalysisResult {
+  compatibilityScore: number
+  summary: string
+  strengths: AnalysisStrength[]
+  gaps: AnalysisGap[]
+  keywordsToInclude: string[]
+  cvRecommendations: string[]
+  adaptedProfessionalSummary: string
+  coverLetterDraft: string
+  disclaimer: string
+}
+
+export interface ScoreContext {
+  band: ScoreBand
+  requiredMet: number
+  requiredMissing: number
+  preferredMet: number
+  preferredMissing: number
+}
+
+export interface AnalysisResponse {
+  id: string
+  status: AnalysisStatus
+  jobPostingId: string | null
+  jobTitle: string
+  jobCompany: string | null
+  language: string
+  result: JobAnalysisResult | null
+  score: ScoreContext | null
+  errorCode: string | null
+  promptId: string
+  promptVersion: string
+  model: string
+  repairAttempted: boolean
+  createdAt: string
+  completedAt: string | null
+}
+
+export interface AnalysisSummary {
+  id: string
+  status: AnalysisStatus
+  jobPostingId: string | null
+  jobTitle: string
+  jobCompany: string | null
+  compatibilityScore: number | null
+  scoreBand: ScoreBand | null
+  errorCode: string | null
+  createdAt: string
+}
+
+export interface UsageResponse {
+  limit: number
+  used: number
+  remaining: number
+  windowHours: number
+  nextSlotAt: string | null
+}

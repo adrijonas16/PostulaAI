@@ -1,4 +1,4 @@
-import type { AuthResponse, JobPostingResponse, JobPostingSummary, ProfileResponse } from '../shared/api/types'
+import type { AnalysisResponse, AuthResponse, JobPostingResponse, JobPostingSummary, ProfileResponse } from '../shared/api/types'
 
 export const testUser = { id: '0190f0d2-0000-7000-8000-000000000001', email: 'laura@example.test', displayName: 'Laura Gómez' }
 
@@ -58,4 +58,32 @@ export function postingSummary(index: number): JobPostingSummary {
     createdAt: '2026-11-01T15:00:00Z',
     updatedAt: '2026-11-01T15:00:00Z',
   }
+}
+
+export const sampleAnalysis: AnalysisResponse = {
+  id: '0190f0d2-0000-7000-8000-0000000000c1',
+  status: 'completed',
+  jobPostingId: samplePosting.id,
+  jobTitle: 'Desarrolladora backend .NET',
+  jobCompany: 'Empresa Ficticia S.A.',
+  language: 'es',
+  result: {
+    compatibilityScore: 78,
+    summary: 'Cumples los requisitos principales; falta Azure, que es deseable.',
+    strengths: [{ requirement: 'C# y ASP.NET Core', evidence: 'Desarrolladora backend en Empresa Ficticia con C#.', importance: 'required' }],
+    gaps: [{ requirement: 'Azure', gapType: 'missing_skill', importance: 'preferred', recommendation: 'Considera una certificación introductoria de Azure.' }],
+    keywordsToInclude: ['C#', 'PostgreSQL'],
+    cvRecommendations: ['Cuantifica el impacto de tus APIs.'],
+    adaptedProfessionalSummary: 'Desarrolladora backend con experiencia en C# y PostgreSQL.',
+    coverLetterDraft: 'Estimado equipo de Empresa Ficticia: me interesa la vacante.',
+    disclaimer: 'Este análisis es una estimación automática y no garantiza contratación.',
+  },
+  score: { band: 'high', requiredMet: 1, requiredMissing: 0, preferredMet: 0, preferredMissing: 1 },
+  errorCode: null,
+  promptId: 'job-analysis',
+  promptVersion: 'v1',
+  model: 'claude-sonnet-5-5',
+  repairAttempted: false,
+  createdAt: '2026-11-02T20:00:00Z',
+  completedAt: '2026-11-02T20:00:30Z',
 }
