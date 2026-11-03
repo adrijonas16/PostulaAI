@@ -1,4 +1,4 @@
-<#
+﻿<#
   Levanta PostulaAI en local con Docker Desktop (Windows PowerShell 5.1+ o PowerShell 7).
   - Verifica Docker.
   - Crea .env con secretos aleatorios si no existe (nunca se sube a Git).
@@ -96,7 +96,8 @@ if ($conflicts.Count -gt 0) {
 
 if ($Watch) {
   Write-Host 'Levantando en modo recarga automática (la primera vez descarga dependencias y compila; puede tardar varios minutos)...'
-  docker compose -f $composeFile up -d --remove-orphans
+  # Recreate the containers and their dependency volumes so new packages or settings always take effect.
+  docker compose -f $composeFile up -d --remove-orphans --force-recreate --renew-anon-volumes
 } else {
   Write-Host 'Construyendo y levantando contenedores (la primera vez tarda varios minutos)...'
   docker compose -f $composeFile up -d --build --remove-orphans
