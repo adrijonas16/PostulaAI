@@ -105,7 +105,7 @@ powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1 -Watch
 ./scripts/dev-up.sh --watch
 ```
 
-Usa `docker-compose.watch.yml`: la API corre con `dotnet watch` y el frontend con el servidor de Vite, ambos directamente desde las carpetas del repositorio. Al editar código o hacer `git pull`, la página se actualiza sola y la API se reinicia sola en unos segundos, sin reconstruir imágenes. Las migraciones nuevas se aplican al reiniciarse la API. La primera vez tarda más porque descarga dependencias y compila dentro del contenedor. Usa los mismos puertos y la misma base de datos que el modo normal.
+Usa `docker-compose.watch.yml`: la API corre con `dotnet watch` y el frontend con el servidor de Vite, ambos directamente desde las carpetas del repositorio. Al editar código o hacer `git pull`, la página se actualiza sola y la API se reinicia sola en unos segundos, sin reconstruir imágenes. Si cambian las dependencias del frontend (`package-lock.json`), el contenedor las reinstala y reinicia Vite por su cuenta. Las migraciones nuevas se aplican al reiniciarse la API. La primera vez tarda más porque descarga dependencias y compila dentro del contenedor. Usa los mismos puertos y la misma base de datos que el modo normal.
 
 ### Configuración manual
 
