@@ -41,6 +41,8 @@ public sealed class ClaudeClient(HttpClient httpClient, ClaudeOptions options, T
 {
     public string Model => options.Model;
 
+    public bool IsConfigured => options.IsConfigured;
+
     public async Task<AICompletionResult> CompleteAsync(AICompletionRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

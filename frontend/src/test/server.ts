@@ -16,6 +16,7 @@ export const server = setupServer(
   http.post(api('/auth/logout'), () => new HttpResponse(null, { status: 204 })),
   http.get(api('/profiles/me'), () => problem(404, 'profile_not_found', 'Todavía no has creado tu perfil profesional.')),
   http.get(api('/usage/me'), () => HttpResponse.json({ limit: 10, used: 0, remaining: 10, windowHours: 24, nextSlotAt: null })),
+  http.get(api('/ai/status'), () => HttpResponse.json({ configured: true })),
   http.get(api('/analyses'), () => HttpResponse.json({ items: [], page: 1, pageSize: 10, totalCount: 0 })),
   http.get(api('/job-postings'), ({ request }) => {
     const url = new URL(request.url)

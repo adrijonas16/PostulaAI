@@ -83,6 +83,8 @@ La verificación contra invención revisa la evidencia de cada fortaleza, el res
 | Código | HTTP | Significado |
 |---|---|---|
 | `ai_not_configured` | 503 | Falta `ANTHROPIC_API_KEY` o fue rechazada. No consume uso. |
+
+`GET /api/v1/ai/status` responde `{ "configured": bool }` según haya clave del proveedor. La interfaz lo consulta para avisar antes de importar un CV o analizar, en vez de dejar esperar al usuario.
 | `ai_rate_limited` | 503 | 429/529 persistentes tras los reintentos. |
 | `ai_unavailable` | 503 | Error de red o 5xx persistente. |
 | `ai_invalid_output` | 502 | El resultado no pasó la validación ni tras la reparación. |

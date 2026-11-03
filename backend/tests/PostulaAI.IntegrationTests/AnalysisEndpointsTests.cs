@@ -223,4 +223,29 @@ public sealed class AnalysisEndpointsTests : IDisposable
         Assert.Equal("ai_unavailable", page.Items[0].ErrorCode);
         Assert.Equal(("high", 78), (page.Items[1].ScoreBand, page.Items[1].CompatibilityScore));
     }
+
+    [Fact]
+    public async Task AiStatus_RequiresAuthentication_AndReportsWhetherTheProviderIsConfigured()
+    {
+        using var client = factory.CreateApiClient();
+        var session = await RegisterAsync(client);
+
+        using var anonymous = await client.GetAsync(new Uri("/api/v1/ai/status", UriKind.Relative));
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+
+        try
+        {
+            factory.AI.IsConfigured = false;
+            using var missing = await client.SendAsync(WithBearer(HttpMethod.Get, "/api/v1/ai/status", session.Auth.AccessToken));
+            Assert.Equal(HttpStatusCode.OK, missing.StatusCode);
+            Assert.Equal("{\"configured\":false}", await missing.Content.ReadAsStringAsync());
+        }
+        finally
+        {
+            factory.AI.IsConfigured = true;
+        }
+
+        using var configured = await client.SendAsync(WithBearer(HttpMethod.Get, "/api/v1/ai/status", session.Auth.AccessToken));
+        Assert.Equal("{\"configured\":true}", await configured.Content.ReadAsStringAsync());
+    }
 }
