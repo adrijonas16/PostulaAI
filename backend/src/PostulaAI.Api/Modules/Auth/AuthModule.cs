@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using PostulaAI.Api.Modules.Users.Domain;
+using PostulaAI.Api.Shared.Email;
 using PostulaAI.Api.Shared.Errors;
 using PostulaAI.Api.Shared.Security;
 
@@ -26,6 +27,9 @@ public static class AuthModule
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddScoped<AuthService>();
+        services.AddScoped<EmailVerificationService>();
+        services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.SectionName);
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 

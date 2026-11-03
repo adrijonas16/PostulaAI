@@ -48,7 +48,7 @@ Implementado en Fase 0: host, ProblemDetails, manejador global de excepciones, `
 
 ## Modelo de datos
 
-Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). Fase 3: `Analysis` (migración `AddAnalyses`). Seguimiento de postulaciones: columnas de postulación en `JobPosting` (migración `AddApplicationTracking`), con `ProviderCalled` para contar el uso y `JobTitle`/`JobCompany` desnormalizados para el historial.
+Implementado en Fase 1: `User`, `RefreshToken`, `ProfessionalProfile` y sus tablas hijas, `AuditLog` (migración `InitialCreate`). Fase 2: `JobPosting` (migración `AddJobPostings`). Fase 3: `Analysis` (migración `AddAnalyses`). Seguimiento de postulaciones: columnas de postulación en `JobPosting` (migración `AddApplicationTracking`). Verificación de correo y presupuesto de IA: `User.EmailVerifiedAt`, `EmailVerificationToken` y `AiUsageEvent` (migración `AddEmailVerificationAndAiBudget`), con `ProviderCalled` para contar el uso y `JobTitle`/`JobCompany` desnormalizados para el historial.
 
 ```text
 User 1──* RefreshToken
@@ -109,7 +109,7 @@ frontend/src/
   shared/     ui/ (componentes accesibles) · api/ (cliente HTTP tipado, sesión en memoria) · lib/
 ```
 
-Rutas: `/`, `/iniciar-sesion`, `/registro`, `/app`, `/app/perfil`, `/app/vacantes`, `/app/vacantes/nueva`, `/app/vacantes/:id/editar`, `/app/analisis/nuevo`, `/app/analisis`, `/app/analisis/:id`, `/app/configuracion`.
+Rutas: `/`, `/iniciar-sesion`, `/registro`, `/app`, `/app/perfil`, `/app/vacantes`, `/app/vacantes/nueva`, `/app/vacantes/:id/editar`, `/app/analisis/nuevo`, `/app/analisis`, `/app/analisis/:id`, `/app/configuracion`, `/verificar-correo`.
 
 Herramientas: React 19, React Router, TanStack Query, react-hook-form + zod, Tailwind CSS 4, TypeScript estricto, oxlint, Vitest + Testing Library + MSW.
 

@@ -12,6 +12,7 @@ using PostulaAI.Api.Modules.JobPostings.Contracts;
 using PostulaAI.Api.Modules.ProfessionalProfiles;
 using PostulaAI.Api.Modules.ProfessionalProfiles.Contracts;
 using PostulaAI.Api.Modules.UsageLimits;
+using PostulaAI.Api.Modules.UsageLimits.Domain;
 using PostulaAI.Api.Shared.Errors;
 using PostulaAI.Api.Shared.Persistence;
 
@@ -26,6 +27,7 @@ public sealed partial class AnalysisService(
     ProfileService profiles,
     JobPostingService jobPostings,
     UsageLimitService usage,
+    AiBudgetService aiBudget,
     JobAnalysisService analyzer,
     IAuditTrail audit,
     TimeProvider time,
@@ -62,6 +64,11 @@ public sealed partial class AnalysisService(
         {
             return new AppError(ErrorCodes.UsageLimitReached, StatusCodes.Status429TooManyRequests,
                 $"Alcanzaste el límite de {currentUsage.Limit} análisis cada {currentUsage.WindowHours} horas. Intenta más tarde.");
+        }
+
+        if (await aiBudget.TryReserveAsync(userId, AiFeature.Analysis, cancellationToken) is { } budgetError)
+        {
+            return budgetError;
         }
 
         var language = (request.Language ?? DefaultLanguage).ToLowerInvariant();

@@ -4,6 +4,7 @@ using PostulaAI.Api.Modules.AuditLogs.Domain;
 using PostulaAI.Api.Modules.Auth.Domain;
 using PostulaAI.Api.Modules.JobPostings.Domain;
 using PostulaAI.Api.Modules.ProfessionalProfiles.Domain;
+using PostulaAI.Api.Modules.UsageLimits.Domain;
 using PostulaAI.Api.Modules.Users.Domain;
 
 namespace PostulaAI.Api.Shared.Persistence;
@@ -25,6 +26,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<Analysis> Analyses => Set<Analysis>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    public DbSet<AiUsageEvent> AiUsageEvents => Set<AiUsageEvent>();
+
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

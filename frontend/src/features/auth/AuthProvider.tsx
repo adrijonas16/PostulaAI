@@ -46,6 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await authApi.register(request)
       },
       logout,
+      reloadUser: async () => {
+        await refreshSession()
+      },
     }
   }, [current, restoring, logout])
 

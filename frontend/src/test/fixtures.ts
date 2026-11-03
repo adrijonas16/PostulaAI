@@ -1,6 +1,12 @@
 import type { AnalysisResponse, AuthResponse, JobPostingResponse, JobPostingSummary, ProfileResponse } from '../shared/api/types'
 
-export const testUser = { id: '0190f0d2-0000-7000-8000-000000000001', email: 'laura@example.test', displayName: 'Laura Gómez' }
+export const testUser = {
+  id: '0190f0d2-0000-7000-8000-000000000001',
+  email: 'laura@example.test',
+  displayName: 'Laura Gómez',
+  emailVerified: true,
+  emailVerificationPending: false,
+}
 
 export function authResponse(accessToken = 'access-token-1'): AuthResponse {
   return { accessToken, accessTokenExpiresAt: '2030-01-01T00:00:00Z', user: testUser }

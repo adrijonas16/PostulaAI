@@ -155,6 +155,38 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                     b.ToTable("audit_logs", (string)null);
                 });
 
+            modelBuilder.Entity("PostulaAI.Api.Modules.Auth.Domain.EmailVerificationToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("email_verification_tokens", (string)null);
+                });
+
             modelBuilder.Entity("PostulaAI.Api.Modules.Auth.Domain.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -537,6 +569,31 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                     b.ToTable("work_experiences", (string)null);
                 });
 
+            modelBuilder.Entity("PostulaAI.Api.Modules.UsageLimits.Domain.AiUsageEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Feature")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ai_usage_events", (string)null);
+                });
+
             modelBuilder.Entity("PostulaAI.Api.Modules.Users.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -554,6 +611,9 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
+
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -583,6 +643,15 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                         .HasForeignKey("ProfileId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("PostulaAI.Api.Modules.Users.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PostulaAI.Api.Modules.Auth.Domain.EmailVerificationToken", b =>
+                {
                     b.HasOne("PostulaAI.Api.Modules.Users.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -667,6 +736,15 @@ namespace PostulaAI.Api.Shared.Persistence.Migrations
                     b.HasOne("PostulaAI.Api.Modules.ProfessionalProfiles.Domain.ProfessionalProfile", null)
                         .WithMany("Experiences")
                         .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PostulaAI.Api.Modules.UsageLimits.Domain.AiUsageEvent", b =>
+                {
+                    b.HasOne("PostulaAI.Api.Modules.Users.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

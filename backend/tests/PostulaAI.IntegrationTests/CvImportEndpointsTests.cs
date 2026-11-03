@@ -24,7 +24,7 @@ public sealed class CvImportEndpointsTests : IDisposable
 
     public void Dispose() => factory.AI.Reset();
 
-    private static byte[] Docx(string text)
+    internal static byte[] Docx(string text)
     {
         using var output = new MemoryStream();
         using (var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
@@ -42,7 +42,7 @@ public sealed class CvImportEndpointsTests : IDisposable
         return output.ToArray();
     }
 
-    private static HttpRequestMessage Upload(string accessToken, byte[] content, string fileName = "cv.docx")
+    internal static HttpRequestMessage Upload(string accessToken, byte[] content, string fileName = "cv.docx")
     {
         var form = new MultipartFormDataContent();
         var file = new ByteArrayContent(content);
@@ -53,7 +53,7 @@ public sealed class CvImportEndpointsTests : IDisposable
         return request;
     }
 
-    private const string CvText = """
+    internal const string CvText = """
         Laura Gómez
         Desarrolladora backend · linkedin.com/in/laura
         Empresa Ficticia S.A. — Desarrolladora backend (marzo 2022 – actual), Bogotá

@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { ApiError } from '../../shared/api/ApiError'
-import { useAiConfigured } from '../../shared/api/aiStatus'
-import { AiNotConfigured } from '../../shared/ui/AiNotConfigured'
+import { useAiBlockReason } from '../../app/useAiAvailability'
+import { AiUnavailable } from '../../shared/ui/AiUnavailable'
 import { Alert } from '../../shared/ui/Alert'
 import { Button, primaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
@@ -24,7 +24,7 @@ export function RunAnalysisPage() {
   const profileQuery = useQuery({ queryKey: profileQueryKey, queryFn: getProfile })
   const postingsQuery = useQuery({ queryKey: [...jobPostingKeys.list(1, ''), MAX_POSTINGS], queryFn: () => listJobPostings(1, '', MAX_POSTINGS) })
   const usageQuery = useQuery({ queryKey: analysisKeys.usage, queryFn: getUsage })
-  const aiConfigured = useAiConfigured()
+  const blockReason = useAiBlockReason()
 
   const mutation = useMutation({
     mutationFn: (jobPostingId: string) => createAnalysis(jobPostingId),
@@ -125,9 +125,9 @@ export function RunAnalysisPage() {
                   El análisis se hace en español.
                 </p>
               )}
-              {aiConfigured === false && (
+              {blockReason !== null && (
                 <div className="mt-4">
-                  <AiNotConfigured feature="El análisis" />
+                  <AiUnavailable reason={blockReason} feature="el análisis" />
                 </div>
               )}
               {error !== null && (
@@ -155,7 +155,7 @@ export function RunAnalysisPage() {
                 </output>
               )}
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Button type="submit" size="lg" disabled={mutation.isPending || limitReached || aiConfigured === false}>
+                <Button type="submit" size="lg" disabled={mutation.isPending || limitReached || blockReason !== null}>
                   {mutation.isPending ? 'Analizando…' : 'Analizar compatibilidad'}
                 </Button>
                 {limitReached && <p className="text-sm text-redpen">Alcanzaste el límite de análisis por ahora.</p>}

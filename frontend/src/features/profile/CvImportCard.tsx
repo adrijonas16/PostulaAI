@@ -2,8 +2,8 @@ import { useMutation } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { ApiError } from '../../shared/api/ApiError'
 import type { CvImportResponse } from '../../shared/api/types'
-import { useAiConfigured } from '../../shared/api/aiStatus'
-import { AiNotConfigured } from '../../shared/ui/AiNotConfigured'
+import { useAiBlockReason } from '../../app/useAiAvailability'
+import { AiUnavailable } from '../../shared/ui/AiUnavailable'
 import { Alert } from '../../shared/ui/Alert'
 import { Button } from '../../shared/ui/Button'
 import { CV_MAX_BYTES, importCv } from './profileApi'
@@ -54,8 +54,8 @@ function validate(file: File): string | null {
 export function CvImportCard({ hasExistingData, prominent, onImported, onBusyChange }: CvImportCardProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const errorRef = useRef<HTMLDivElement>(null)
-  const aiConfigured = useAiConfigured()
-  const unavailable = aiConfigured === false
+  const blockReason = useAiBlockReason()
+  const unavailable = blockReason !== null
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -172,9 +172,9 @@ export function CvImportCard({ hasExistingData, prominent, onImported, onBusyCha
           Reemplazará lo que hay ahora en el formulario. No se guarda nada hasta que pulses «Guardar perfil».
         </p>
       )}
-      {unavailable && (
+      {blockReason !== null && (
         <div className="mt-5 text-left">
-          <AiNotConfigured feature="La importación del CV" />
+          <AiUnavailable reason={blockReason} feature="la importación del CV" />
           <p className="mt-2 text-sm text-graphite">Mientras tanto puedes llenar tu perfil a mano en las pestañas de abajo.</p>
         </div>
       )}

@@ -9,6 +9,8 @@ export interface AuthContextValue {
   login: (request: LoginRequest) => Promise<void>
   register: (request: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
+  /** Re-reads the user from the server (e.g. after confirming the e-mail in another tab). */
+  reloadUser: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

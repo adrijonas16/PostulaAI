@@ -64,6 +64,7 @@ $ports = [ordered]@{
   'WEB_HOST_PORT'      = [int](Get-EnvValue 'WEB_HOST_PORT' '5173')
   'API_HOST_PORT'      = [int](Get-EnvValue 'API_HOST_PORT' '58080')
   'POSTGRES_HOST_PORT' = [int](Get-EnvValue 'POSTGRES_HOST_PORT' '55432')
+  'MAIL_UI_HOST_PORT'  = [int](Get-EnvValue 'MAIL_UI_HOST_PORT' '8025')
 }
 
 $composeFile = if ($Watch) { 'docker-compose.watch.yml' } else { 'docker-compose.yml' }
@@ -129,6 +130,7 @@ Write-Host 'PostulaAI está listo:' -ForegroundColor Green
 Write-Host "  App:      http://localhost:$webPort"
 Write-Host "  API:      http://localhost:$apiPort/health/ready"
 Write-Host "  Swagger:  http://localhost:$apiPort/swagger"
+Write-Host "  Correos:  http://localhost:$($ports['MAIL_UI_HOST_PORT'])  (aquí llegan los correos de confirmación en local)"
 if ((Get-EnvValue 'ANTHROPIC_API_KEY' '') -eq '') {
   Write-Host '  Nota: ANTHROPIC_API_KEY está vacía; el análisis con IA responderá "no configurado".' -ForegroundColor Yellow
 }

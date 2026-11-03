@@ -2,6 +2,8 @@ using PostulaAI.AI.Contracts;
 using PostulaAI.AI.Services;
 using PostulaAI.Api.Modules.AuditLogs;
 using PostulaAI.Api.Modules.AuditLogs.Domain;
+using PostulaAI.Api.Modules.UsageLimits;
+using PostulaAI.Api.Modules.UsageLimits.Domain;
 using PostulaAI.Api.Shared.Errors;
 using PostulaAI.Api.Shared.Persistence;
 
@@ -10,6 +12,7 @@ namespace PostulaAI.Api.Modules.ProfessionalProfiles.Import;
 /// <summary>Reads a CV file and returns an unsaved profile draft. The file and its text are never stored or logged.</summary>
 public sealed partial class CvImportService(
     CvExtractionService extractor,
+    AiBudgetService aiBudget,
     AppDbContext db,
     IAuditTrail audit,
     TimeProvider time,
@@ -21,6 +24,11 @@ public sealed partial class CvImportService(
         if (!text.IsSuccess)
         {
             return text.Error;
+        }
+
+        if (await aiBudget.TryReserveAsync(userId, AiFeature.CvImport, cancellationToken) is { } budgetError)
+        {
+            return budgetError;
         }
 
         var outcome = await extractor.ExtractAsync(text.Value, CancellationToken.None);

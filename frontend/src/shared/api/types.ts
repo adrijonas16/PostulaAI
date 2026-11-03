@@ -4,6 +4,9 @@ export interface UserResponse {
   id: string
   email: string
   displayName: string
+  emailVerified: boolean
+  /** True while AI features stay locked until the user confirms their e-mail. */
+  emailVerificationPending: boolean
 }
 
 export interface AuthResponse {
