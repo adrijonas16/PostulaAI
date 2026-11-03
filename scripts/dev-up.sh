@@ -28,7 +28,7 @@ docker compose -f docker-compose.watch.yml stop >/dev/null 2>&1 || true
 if [ "${1:-}" = "--watch" ]; then
   compose_file=docker-compose.watch.yml
   attempts=200
-  docker compose -f "$compose_file" up -d --remove-orphans
+  docker compose -f "$compose_file" up -d --remove-orphans --force-recreate --renew-anon-volumes
 else
   docker compose -f "$compose_file" up -d --build --remove-orphans
 fi
