@@ -65,7 +65,7 @@ export function AppLayout() {
                         done ? 'bg-marker text-ink' : isNext ? 'bg-pen text-white' : 'border border-rule text-graphite'
                       }`}
                     >
-                      {done ? '✓' : index + 1}
+                      {done ? <span className="pop inline-block">✓</span> : index + 1}
                     </span>
                     <span className="flex flex-col leading-tight">
                       <span>{label}</span>

@@ -4,6 +4,7 @@ import { ApiError } from '../../shared/api/ApiError'
 import { applicationStatuses, type ApplicationStatus, type JobPostingResponse } from '../../shared/api/types'
 import { Alert } from '../../shared/ui/Alert'
 import { Button } from '../../shared/ui/Button'
+import { Confetti } from '../../shared/ui/Confetti'
 import { applicationStatusLabels, formatDay, todayIso } from './applicationLabels'
 import { jobPostingKeys, updateApplication } from './jobsApi'
 
@@ -24,6 +25,7 @@ export function ApplicationPanel({ posting, adaptedTexts }: ApplicationPanelProp
   const [appliedOn, setAppliedOn] = useState(current.appliedOn ?? todayIso())
   const [notes, setNotes] = useState(current.notes ?? '')
   const [keepTexts, setKeepTexts] = useState(adaptedTexts !== undefined)
+  const [celebrations, setCelebrations] = useState(0)
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; message: string } | null>(null)
   const name = useId()
   const dateId = useId()
@@ -39,9 +41,20 @@ export function ApplicationPanel({ posting, adaptedTexts }: ApplicationPanelProp
         submittedCoverLetter: keepTexts && adaptedTexts !== undefined ? adaptedTexts.coverLetter : current.submittedCoverLetter,
       }),
     onSuccess: async (saved) => {
+      if (saved.application.status === 'offer' && current.status !== 'offer') {
+        setCelebrations((count) => count + 1)
+      }
       queryClient.setQueryData(jobPostingKeys.detail(saved.id), saved)
       await queryClient.invalidateQueries({ queryKey: jobPostingKeys.all })
-      setFeedback({ tone: 'success', message: saved.application.status === 'saved' ? 'Postulación actualizada.' : 'Postulación guardada.' })
+      setFeedback({
+        tone: 'success',
+        message:
+          saved.application.status === 'offer'
+            ? '¡Felicitaciones por la oferta! Quedó guardada.'
+            : saved.application.status === 'saved'
+              ? 'Postulación actualizada.'
+              : 'Postulación guardada.',
+      })
     },
     onError: (error) =>
       setFeedback({ tone: 'error', message: error instanceof ApiError ? error.message : 'No pudimos guardar la postulación. Intenta de nuevo.' }),
@@ -56,7 +69,8 @@ export function ApplicationPanel({ posting, adaptedTexts }: ApplicationPanelProp
   const hasSentTexts = current.submittedSummary !== null || current.submittedCoverLetter !== null
 
   return (
-    <section aria-labelledby="application-title" className="rounded-[var(--radius-sheet)] border-2 border-pen bg-sheet p-5 md:p-6">
+    <section aria-labelledby="application-title" className="relative rounded-[var(--radius-sheet)] border-2 border-pen bg-sheet p-5 md:p-6">
+      {celebrations > 0 && <Confetti key={celebrations} />}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="application-title" className="text-lg font-bold">

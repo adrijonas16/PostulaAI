@@ -34,7 +34,7 @@ describe('public routes', () => {
 
 describe('authenticated routes', () => {
   it.each([
-    ['/app', /inicio/i],
+    ['/app', /^buen(os|as) (días|tardes|noches), laura/i],
     ['/app/vacantes/nueva', /vacante/i],
     ['/app/vacantes/123/editar', /vacante/i],
     ['/app/analisis/nuevo', /nuevo análisis/i],
