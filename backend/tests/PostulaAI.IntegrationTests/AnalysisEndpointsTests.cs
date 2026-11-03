@@ -238,7 +238,7 @@ public sealed class AnalysisEndpointsTests : IDisposable
             factory.AI.IsConfigured = false;
             using var missing = await client.SendAsync(WithBearer(HttpMethod.Get, "/api/v1/ai/status", session.Auth.AccessToken));
             Assert.Equal(HttpStatusCode.OK, missing.StatusCode);
-            Assert.Equal("{\"configured\":false}", await missing.Content.ReadAsStringAsync());
+            Assert.Equal("{\"configured\":false,\"dailyLimitReached\":false}", await missing.Content.ReadAsStringAsync());
         }
         finally
         {
@@ -246,6 +246,6 @@ public sealed class AnalysisEndpointsTests : IDisposable
         }
 
         using var configured = await client.SendAsync(WithBearer(HttpMethod.Get, "/api/v1/ai/status", session.Auth.AccessToken));
-        Assert.Equal("{\"configured\":true}", await configured.Content.ReadAsStringAsync());
+        Assert.Equal("{\"configured\":true,\"dailyLimitReached\":false}", await configured.Content.ReadAsStringAsync());
     }
 }

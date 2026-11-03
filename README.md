@@ -197,6 +197,8 @@ Aún no hay despliegue público (Fase 6).
 ## Limitaciones conocidas
 
 - Sin `ANTHROPIC_API_KEY` el análisis y la importación del CV responden "no configurado" (no consumen el límite de uso) y la interfaz lo avisa antes de intentarlo.
+- **Control de costos:** cada usuario debe confirmar su correo antes de usar la IA, y hay un tope diario de peticiones de IA para todo el sitio (`AI_DAILY_MAX_REQUESTS`, 200 por defecto). En producción, pon además un límite de gasto mensual al workspace de Anthropic.
+- **Correos en local:** Docker Compose incluye Mailpit; los correos de confirmación se ven en http://localhost:8025 y nunca salen a internet. En producción, configura `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_USE_SSL=true`, `EMAIL_FROM` y `APP_BASE_URL`.
 - El análisis es síncrono (15–60 s); si dos peticiones llegan a la vez, el límite de uso puede excederse en uno.
 - La verificación contra invención es determinista y cubre un vocabulario curado de tecnologías, certificaciones e idiomas; no detecta todas las invenciones posibles (por ejemplo, años de experiencia).
 - Aún no hay métricas de calidad del prompt: el dataset y el runner de evaluaciones son la Fase 5.

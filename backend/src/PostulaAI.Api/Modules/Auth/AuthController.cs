@@ -10,6 +10,7 @@ namespace PostulaAI.Api.Modules.Auth;
 [Route("api/v1/auth")]
 public sealed class AuthController(
     AuthService authService,
+    EmailVerificationService emailVerification,
     IValidator<RegisterRequest> registerValidator,
     IValidator<LoginRequest> loginValidator) : ApiControllerBase
 {
@@ -100,6 +101,29 @@ public sealed class AuthController(
     {
         var result = await authService.GetCurrentUserAsync(CurrentUserId, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : ProblemFor(result.Error);
+    }
+
+    /// <summary>Confirms the e-mail address with the token from the link sent by e-mail.</summary>
+    [HttpPost("verify-email")]
+    [EnableRateLimiting(AuthRateLimitOptions.PolicyName)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyEmail(VerifyEmailRequest request, CancellationToken cancellationToken)
+    {
+        var error = await emailVerification.VerifyAsync(request?.Token, cancellationToken);
+        return error is null ? NoContent() : ProblemFor(error);
+    }
+
+    /// <summary>Sends a new confirmation e-mail to the authenticated user (at most once a minute).</summary>
+    [HttpPost("resend-verification")]
+    [Authorize]
+    [EnableRateLimiting(AuthRateLimitOptions.PolicyName)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ResendVerification(CancellationToken cancellationToken)
+    {
+        var error = await emailVerification.ResendAsync(CurrentUserId, cancellationToken);
+        return error is null ? NoContent() : ProblemFor(error);
     }
 
     private void SetRefreshCookie(AuthSession session) =>

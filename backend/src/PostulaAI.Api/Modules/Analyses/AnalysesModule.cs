@@ -31,6 +31,8 @@ public static class AnalysesModule
 
         services.AddOptions<AnalysisUsageOptions>().BindConfiguration(AnalysisUsageOptions.SectionName);
         services.AddScoped<UsageLimitService>();
+        services.AddScoped<AiBudgetService>();
+        services.AddOptions<AiDailyBudgetOptions>().BindConfiguration(AiDailyBudgetOptions.SectionName);
         services.AddScoped<AnalysisService>();
         return services;
     }

@@ -18,6 +18,9 @@ public sealed class User
 
     public required string DisplayName { get; set; }
 
+    /// <summary>When the user confirmed they own <see cref="Email"/>. Null until then.</summary>
+    public DateTimeOffset? EmailVerifiedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset UpdatedAt { get; set; }

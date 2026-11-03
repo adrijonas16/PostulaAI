@@ -31,6 +31,8 @@ public static class AuditActions
     public const string LoginFailed = "auth.login_failed";
     public const string RefreshTokenReuseDetected = "auth.refresh_token_reuse_detected";
     public const string LoggedOut = "auth.logged_out";
+    public const string VerificationEmailSent = "auth.verification_email_sent";
+    public const string EmailVerified = "auth.email_verified";
     public const string ProfileUpdated = "profile.updated";
     public const string JobPostingCreated = "job_posting.created";
     public const string JobPostingUpdated = "job_posting.updated";

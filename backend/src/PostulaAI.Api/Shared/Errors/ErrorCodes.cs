@@ -22,6 +22,11 @@ public static class ErrorCodes
     public const string AnalysisNotFound = "analysis_not_found";
     public const string ProfileRequired = "profile_required";
     public const string UsageLimitReached = "usage_limit_reached";
+    public const string AiDailyBudgetReached = "ai_daily_budget_reached";
+
+    public const string EmailNotVerified = "email_not_verified";
+    public const string InvalidVerificationToken = "invalid_verification_token";
+    public const string VerificationEmailCooldown = "verification_email_cooldown";
 
     public const string CvTooLarge = "cv_too_large";
     public const string CvUnsupportedFormat = "cv_unsupported_format";

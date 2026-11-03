@@ -4,6 +4,7 @@ import { AnalysisResultPage } from '../features/analyses/AnalysisResultPage'
 import { RunAnalysisPage } from '../features/analyses/RunAnalysisPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
+import { VerifyEmailPage } from '../features/auth/VerifyEmailPage'
 import { RedirectIfAuthenticated, RequireAuth } from '../features/auth/RouteGuards'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { JobPostingEditorPage } from '../features/jobs/JobPostingEditorPage'
@@ -19,6 +20,7 @@ export const paths = {
   home: '/',
   login: '/iniciar-sesion',
   register: '/registro',
+  verifyEmail: '/verificar-correo',
   dashboard: '/app',
   profile: '/app/perfil',
   jobPostings: '/app/vacantes',
@@ -35,6 +37,7 @@ export const routes: RouteObject[] = [
     element: <PublicLayout />,
     children: [
       { index: true, element: <LandingPage /> },
+      { path: paths.verifyEmail, element: <VerifyEmailPage /> },
       {
         element: <RedirectIfAuthenticated />,
         children: [

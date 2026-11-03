@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router'
+import { EmailVerificationBanner } from './EmailVerificationBanner'
 import { useAuth } from '../features/auth/AuthContext'
 import { Button } from '../shared/ui/Button'
 import { Logo } from '../shared/ui/Logo'
@@ -107,6 +108,7 @@ export function AppLayout() {
       </aside>
 
       <main id="main" className="min-w-0 px-5 py-8 md:px-10 md:py-10">
+        <EmailVerificationBanner />
         <Outlet />
       </main>
     </div>

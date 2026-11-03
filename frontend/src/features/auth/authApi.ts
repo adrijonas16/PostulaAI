@@ -14,6 +14,14 @@ export async function register(request: RegisterRequest): Promise<AuthResponse> 
   return auth
 }
 
+export function verifyEmail(token: string): Promise<void> {
+  return apiRequest<void>('/auth/verify-email', { method: 'POST', body: { token }, auth: false })
+}
+
+export function resendVerification(): Promise<void> {
+  return apiRequest<void>('/auth/resend-verification', { method: 'POST' })
+}
+
 export async function logout(): Promise<void> {
   try {
     await apiRequest<void>('/auth/logout', { method: 'POST', auth: false })

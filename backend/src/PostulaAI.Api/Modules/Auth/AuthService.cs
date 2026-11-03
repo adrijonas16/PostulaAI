@@ -15,6 +15,7 @@ public sealed class AuthService(
     AppDbContext db,
     IPasswordHasher<User> passwordHasher,
     ITokenService tokens,
+    EmailVerificationService emailVerification,
     IAuditTrail audit,
     IOptions<JwtOptions> jwtOptions,
     TimeProvider time)
@@ -56,6 +57,7 @@ public sealed class AuthService(
 
         var session = IssueSession(newUser, familyId: Guid.CreateVersion7(), now);
         await db.SaveChangesAsync(cancellationToken);
+        await emailVerification.SendAsync(newUser, cancellationToken);
         return session;
     }
 
@@ -205,5 +207,10 @@ public sealed class AuthService(
         }
     }
 
-    private static UserResponse ToResponse(User user) => new(user.Id, user.Email, user.DisplayName);
+    private UserResponse ToResponse(User user) => new(
+        user.Id,
+        user.Email,
+        user.DisplayName,
+        user.EmailVerifiedAt is not null,
+        emailVerification.IsEnforced && user.EmailVerifiedAt is null);
 }

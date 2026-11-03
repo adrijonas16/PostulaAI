@@ -22,6 +22,7 @@
 | Registro | Responde `409` si el correo ya existe. Esto permite enumerar correos; es un compromiso aceptado en v1, mitigado por el rate limiting |
 | Configuración | La API no arranca sin `Jwt:SigningKey` de al menos 32 bytes (validación al inicio) |
 | Frontend | El access token nunca se guarda en `localStorage` ni `sessionStorage` (hay una prueba que lo verifica) |
+| Verificación de correo | Al registrarse se envía un enlace de un solo uso (token aleatorio de 256 bits; solo se guarda su hash SHA-256; vence en 24 h). Sin confirmar el correo no se pueden usar las funciones de IA (`403 email_not_verified`), para que crear cuentas desechables no dé IA gratis. El reenvío exige sesión y tiene una espera mínima de 60 s. Solo se exige si hay SMTP configurado (`Email:SmtpHost`); en local, Mailpit recibe los correos. |
 
 ## Autorización
 
@@ -35,7 +36,9 @@
 
 | Dato | Dónde | Notas |
 |---|---|---|
-| Correo, nombre | `User` | Necesario para la cuenta |
+| Correo, nombre | `User` | Necesario para la cuenta. `EmailVerifiedAt` indica cuándo se confirmó |
+| Tokens de verificación | `EmailVerificationToken` | Solo el hash. Se borran con el usuario |
+| Uso de IA | `AiUsageEvent` | Usuario, función (análisis o CV) y fecha; sin contenido. Se borra con el usuario |
 | Perfil profesional completo | `ProfessionalProfile` y tablas hijas | Lo escribe el usuario |
 | Vacantes | `JobPosting` | Texto pegado por el usuario |
 | Postulaciones | `JobPosting.ApplicationStatus`, `AppliedOn`, `ApplicationNotes`, `SubmittedSummary`, `SubmittedCoverLetter` | Lo que el usuario registra sobre su postulación, incluidos los textos que envió. Se borra con la vacante. |
@@ -53,6 +56,8 @@ Reglas:
 
 - Máximo configurable de análisis por usuario en una ventana móvil (`UsageLimits:Analyses:MaxPerWindow`, por defecto 10 cada 24 h). Solo cuentan los intentos que llegaron al proveedor de IA.
 - Longitud máxima de perfil y vacante para controlar coste y abuso.
+- ✅ Presupuesto diario del sitio (`UsageLimits:AiDaily:MaxRequests`, por defecto 200; `AI_DAILY_MAX_REQUESTS` en `.env`): tope de peticiones de IA (análisis e importaciones de CV de todos los usuarios) en 24 h móviles. Al llegar al tope, la IA responde `503 ai_daily_budget_reached` hasta que se libere cupo. Cada petición se registra antes de llamar al proveedor, así que las fallidas o reparadas también cuentan. Dos peticiones simultáneas pueden superar el tope en una.
+- Recomendado además en producción: un workspace propio en la consola de Anthropic con límite de gasto mensual y alertas.
 - Errores `429`, `529` y `5xx` del proveedor: hasta 2 reintentos con espera acotada (respeta `retry-after`, máximo 20 s) y después un mensaje claro al usuario.
 - Los logs del análisis solo registran id, estado, código de error, modelo, versión de prompt, tokens, latencia y si hubo reparación. Nunca el perfil, la vacante, el prompt ni la respuesta.
 
