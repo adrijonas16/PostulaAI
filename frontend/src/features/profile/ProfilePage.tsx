@@ -44,6 +44,7 @@ export function ProfilePage() {
   const [status, setStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(null)
   const [importNotice, setImportNotice] = useState<string[] | null>(null)
   const [tab, setTab] = useState<TabId>('datos')
+  const [importing, setImporting] = useState(false)
 
   const form = useForm<ProfileFormValues>({ resolver: zodResolver(profileSchema), defaultValues: emptyProfile })
   const {
@@ -158,6 +159,7 @@ export function ProfilePage() {
         <CvImportCard
           prominent={isEmptyProfile}
           hasExistingData={isDirty || profileQuery.data !== null}
+          onBusyChange={setImporting}
           onImported={({ draft, warnings }) => {
             reset(draftToFormValues(draft), { keepDefaultValues: true })
             setStatus(null)
@@ -181,7 +183,7 @@ export function ProfilePage() {
         )}
       </div>
 
-      <form noValidate onSubmit={onSubmit} className="mt-8">
+      <form noValidate onSubmit={onSubmit} aria-busy={importing} className={`mt-8 transition-opacity ${importing ? 'pointer-events-none opacity-40' : ''}`}>
         <ProfileTabs tabs={tabs} active={tab} onSelect={(id) => setTab(id as TabId)} />
 
         <div className="mt-5">

@@ -196,7 +196,7 @@ Aún no hay despliegue público (Fase 6).
 
 ## Limitaciones conocidas
 
-- Sin `ANTHROPIC_API_KEY` el análisis responde "no configurado" (no consume el límite de uso).
+- Sin `ANTHROPIC_API_KEY` el análisis y la importación del CV responden "no configurado" (no consumen el límite de uso) y la interfaz lo avisa antes de intentarlo.
 - El análisis es síncrono (15–60 s); si dos peticiones llegan a la vez, el límite de uso puede excederse en uno.
 - La verificación contra invención es determinista y cubre un vocabulario curado de tecnologías, certificaciones e idiomas; no detecta todas las invenciones posibles (por ejemplo, años de experiencia).
 - Aún no hay métricas de calidad del prompt: el dataset y el runner de evaluaciones son la Fase 5.

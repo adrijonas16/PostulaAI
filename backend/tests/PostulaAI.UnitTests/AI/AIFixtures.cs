@@ -61,6 +61,8 @@ internal sealed class FakeAIClient : IAIClient
 
     public string Model => "claude-test";
 
+    public bool IsConfigured => true;
+
     public FakeAIClient Returns(AICompletionResult result)
     {
         responses.Enqueue(() => result);

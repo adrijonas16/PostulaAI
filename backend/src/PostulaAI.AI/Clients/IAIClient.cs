@@ -10,6 +10,9 @@ public interface IAIClient
     /// <summary>Model identifier that will be used, for traceability.</summary>
     string Model { get; }
 
+    /// <summary>False when the provider has no credentials; calls would fail with <see cref="AIProviderErrorKind.NotConfigured"/>.</summary>
+    bool IsConfigured { get; }
+
     /// <exception cref="AIProviderException">The provider could not produce a response.</exception>
     Task<AICompletionResult> CompleteAsync(AICompletionRequest request, CancellationToken cancellationToken);
 }

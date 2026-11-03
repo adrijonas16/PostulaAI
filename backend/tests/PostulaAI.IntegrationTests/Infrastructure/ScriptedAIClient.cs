@@ -15,6 +15,8 @@ public sealed class ScriptedAIClient : IAIClient
 
     public string Model => "claude-integration-fake";
 
+    public bool IsConfigured { get; set; } = true;
+
     public int Calls { get; private set; }
 
     public static JobAnalysisResult ValidResult() => new(
@@ -39,7 +41,11 @@ public sealed class ScriptedAIClient : IAIClient
     public void EnqueueError(AIProviderErrorKind kind) =>
         queue.Enqueue(() => throw new AIProviderException(kind, $"scripted {kind}"));
 
-    public void Reset() => queue.Clear();
+    public void Reset()
+    {
+        queue.Clear();
+        IsConfigured = true;
+    }
 
     public static CvExtraction CvExtraction() => new(
         "Laura Gómez",

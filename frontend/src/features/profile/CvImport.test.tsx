@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
+import { delay, http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import type { CvImportResponse } from '../../shared/api/types'
 import { renderApp } from '../../test/renderApp'
@@ -105,5 +105,37 @@ describe('CV import', () => {
     await user.click(screen.getByRole('button', { name: 'Importar CV' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/pdf escaneado/i)
+  })
+
+  it('warns before uploading when the server has no AI key, and keeps manual editing available', async () => {
+    withAuthenticatedSession()
+    server.use(http.get(api('/ai/status'), () => HttpResponse.json({ configured: false })))
+    renderApp('/app/perfil')
+
+    expect(await screen.findByText(/la importación del cv no está disponible/i)).toBeInTheDocument()
+    expect(screen.getByText(/ANTHROPIC_API_KEY=/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Elegir archivo' })).toBeDisabled()
+    expect(screen.getByLabelText(/nombre profesional/i)).toBeEnabled()
+  })
+
+  it('shows progress and locks the form while the CV is being read', async () => {
+    const user = userEvent.setup()
+    withAuthenticatedSession()
+    server.use(
+      http.post(api('/profiles/me/import'), async () => {
+        await delay(300)
+        return HttpResponse.json(importResult)
+      }),
+    )
+    renderApp('/app/perfil')
+
+    await user.upload(await screen.findByLabelText('Archivo del CV'), cvFile())
+    await user.click(screen.getByRole('button', { name: 'Importar CV' }))
+
+    expect(await screen.findByText(/leyendo tu cv y llenando el formulario/i)).toBeInTheDocument()
+    expect(document.querySelector('form')).toHaveAttribute('aria-busy', 'true')
+    expect(await screen.findByDisplayValue('Laura Gómez')).toBeInTheDocument()
+    expect(document.querySelector('form')).toHaveAttribute('aria-busy', 'false')
+    expect(screen.queryByText(/leyendo tu cv y llenando el formulario/i)).not.toBeInTheDocument()
   })
 })

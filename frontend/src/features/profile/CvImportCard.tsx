@@ -1,7 +1,9 @@
 import { useMutation } from '@tanstack/react-query'
-import { useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { ApiError } from '../../shared/api/ApiError'
 import type { CvImportResponse } from '../../shared/api/types'
+import { useAiConfigured } from '../../shared/api/aiStatus'
+import { AiNotConfigured } from '../../shared/ui/AiNotConfigured'
 import { Alert } from '../../shared/ui/Alert'
 import { Button } from '../../shared/ui/Button'
 import { CV_MAX_BYTES, importCv } from './profileApi'
@@ -13,6 +15,33 @@ interface CvImportCardProps {
   /** Big drop zone for an empty profile; a slim bar once the profile has data. */
   prominent: boolean
   onImported: (result: CvImportResponse) => void
+  /** Lets the page lock the form while the CV is being read. */
+  onBusyChange?: (busy: boolean) => void
+}
+
+function ImportProgress() {
+  const [seconds, setSeconds] = useState(0)
+  useEffect(() => {
+    const timer = setInterval(() => setSeconds((value) => value + 1), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <output aria-live="polite" className="mt-5 block rounded-[var(--radius-field)] bg-pen-soft p-4 text-left text-pen-strong">
+      <span className="flex items-center justify-between gap-3 font-bold">
+        Leyendo tu CV y llenando el formulario…
+        <span className="font-normal tabular-nums" aria-hidden="true">
+          {seconds} s
+        </span>
+      </span>
+      <span className="mt-3 block h-2 overflow-hidden rounded-full bg-sheet">
+        <span className="block h-full w-1/3 animate-[progress_1.6s_ease-in-out_infinite] rounded-full bg-pen motion-reduce:animate-none" />
+      </span>
+      <span className="mt-3 block text-sm">
+        Suele tardar entre 20 segundos y un minuto. No cierres esta página; cuando termine, verás tus datos en cada pestaña.
+      </span>
+    </output>
+  )
 }
 
 function validate(file: File): string | null {
@@ -22,8 +51,11 @@ function validate(file: File): string | null {
 }
 
 /** Lets the user pre-fill the form from a CV. Nothing is saved until they press "Guardar perfil". */
-export function CvImportCard({ hasExistingData, prominent, onImported }: CvImportCardProps) {
+export function CvImportCard({ hasExistingData, prominent, onImported, onBusyChange }: CvImportCardProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const errorRef = useRef<HTMLDivElement>(null)
+  const aiConfigured = useAiConfigured()
+  const unavailable = aiConfigured === false
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -48,9 +80,18 @@ export function CvImportCard({ hasExistingData, prominent, onImported }: CvImpor
     if (!mutation.isPending) choose(event.dataTransfer.files[0] ?? null)
   }
 
+  // Bring a failure into view: the card may be far from where the user is looking.
+  useEffect(() => {
+    if (error !== null) {
+      errorRef.current?.focus()
+      errorRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+    }
+  }, [error])
+
   const onImport = async () => {
     if (file === null) return
     setError(null)
+    onBusyChange?.(true)
     try {
       const result = await mutation.mutateAsync(file)
       onImported(result)
@@ -58,6 +99,8 @@ export function CvImportCard({ hasExistingData, prominent, onImported }: CvImpor
       if (inputRef.current !== null) inputRef.current.value = ''
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : 'No pudimos leer tu CV. Intenta de nuevo.')
+    } finally {
+      onBusyChange?.(false)
     }
   }
 
@@ -95,11 +138,11 @@ export function CvImportCard({ hasExistingData, prominent, onImported }: CvImpor
             accept={ACCEPTED}
             aria-label="Archivo del CV"
             onChange={onFileChange}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || unavailable}
             className="sr-only"
           />
           {file === null ? (
-            <Button variant={prominent ? 'primary' : 'secondary'} size={prominent ? 'lg' : 'md'} onClick={() => inputRef.current?.click()} disabled={mutation.isPending}>
+            <Button variant={prominent ? 'primary' : 'secondary'} size={prominent ? 'lg' : 'md'} onClick={() => inputRef.current?.click()} disabled={mutation.isPending || unavailable}>
               Elegir archivo
             </Button>
           ) : (
@@ -116,7 +159,7 @@ export function CvImportCard({ hasExistingData, prominent, onImported }: CvImpor
                   ×
                 </button>
               </span>
-              <Button size={prominent ? 'lg' : 'md'} onClick={() => void onImport()} disabled={mutation.isPending}>
+              <Button size={prominent ? 'lg' : 'md'} onClick={() => void onImport()} disabled={mutation.isPending || unavailable}>
                 {mutation.isPending ? 'Leyendo tu CV…' : 'Importar CV'}
               </Button>
             </>
@@ -129,14 +172,18 @@ export function CvImportCard({ hasExistingData, prominent, onImported }: CvImpor
           Reemplazará lo que hay ahora en el formulario. No se guarda nada hasta que pulses «Guardar perfil».
         </p>
       )}
-      {mutation.isPending && (
-        <output aria-live="polite" className={`mt-4 block text-sm text-pen-strong ${prominent ? 'text-center' : ''}`}>
-          Leyendo tu CV y ordenando los datos. Puede tardar hasta un minuto.
-        </output>
+      {unavailable && (
+        <div className="mt-5 text-left">
+          <AiNotConfigured feature="La importación del CV" />
+          <p className="mt-2 text-sm text-graphite">Mientras tanto puedes llenar tu perfil a mano en las pestañas de abajo.</p>
+        </div>
       )}
+      {mutation.isPending && <ImportProgress />}
       {error !== null && (
-        <div className="mt-4 text-left">
-          <Alert tone="error">{error}</Alert>
+        <div ref={errorRef} tabIndex={-1} className="mt-5 text-left focus:outline-none">
+          <Alert tone="error">
+            <span className="font-bold">No se pudo importar tu CV.</span> {error}
+          </Alert>
         </div>
       )}
     </section>
