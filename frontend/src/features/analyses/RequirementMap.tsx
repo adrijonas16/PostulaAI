@@ -1,4 +1,5 @@
-import { useId, useState } from 'react'
+import { useId, useRef, useState, type CSSProperties } from 'react'
+import { useInView } from '../../shared/lib/motion'
 import type { AnalysisGap, AnalysisStrength, JobAnalysisResult } from '../../shared/api/types'
 import { gapTypeLabels, importanceLabels } from './analysisLabels'
 
@@ -35,6 +36,9 @@ export function RequirementMap({ result }: { result: JobAnalysisResult }) {
   const [filter, setFilter] = useState<Filter>('all')
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set())
   const name = useId()
+  const sectionRef = useRef<HTMLElement>(null)
+  // The highlighter draws over each requirement the first time the list comes into view.
+  const drawn = useInView(sectionRef, { once: true, threshold: 0.2 })
   const rows = buildRows(result)
   const visible = rows.filter((row) => filter === 'all' || row.kind === filter)
   const counts: Record<Filter, number> = {
@@ -52,7 +56,7 @@ export function RequirementMap({ result }: { result: JobAnalysisResult }) {
     })
 
   return (
-    <section aria-labelledby="map-title" className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5 md:p-6">
+    <section ref={sectionRef} aria-labelledby="map-title" className="rounded-[var(--radius-sheet)] border border-rule bg-sheet p-5 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 id="map-title" className="text-xl font-bold">
@@ -89,7 +93,7 @@ export function RequirementMap({ result }: { result: JobAnalysisResult }) {
         </p>
       ) : (
         <ul aria-label="Requisitos" className="mt-5 divide-y divide-rule border-y border-rule">
-          {visible.map((row) => {
+          {visible.map((row, index) => {
             const expanded = open.has(row.key)
             const panelId = `${name}-${row.key}`
             return (
@@ -110,7 +114,19 @@ export function RequirementMap({ result }: { result: JobAnalysisResult }) {
                     {row.kind === 'met' ? '✓' : '!'}
                   </span>
                   <span className="flex-1">
-                    <span className={`font-semibold ${row.kind === 'met' ? 'marker' : 'redline'}`}>{row.item.requirement}</span>
+                    <span
+                      className={`font-semibold transition-[text-decoration-color] duration-500 ${
+                        row.kind === 'met' ? `marker-sweep ${drawn ? 'is-on' : ''}` : 'redline'
+                      }`}
+                      style={
+                        {
+                          transitionDelay: `${index * 110}ms`,
+                          ...(row.kind === 'missing' && !drawn ? { textDecorationColor: 'transparent' } : {}),
+                        } as CSSProperties
+                      }
+                    >
+                      {row.item.requirement}
+                    </span>
                     <span className="sr-only">{row.kind === 'met' ? ', lo tienes' : ', te falta'}</span>
                     <span className="mt-1 flex flex-wrap gap-2 text-xs">
                       <span className={row.item.importance === 'required' ? 'font-semibold text-ink' : 'text-graphite'}>

@@ -4,6 +4,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router'
 import { AppProviders } from './app/AppProviders'
 import { routes } from './app/routes'
 import '@fontsource-variable/atkinson-hyperlegible-next'
+import '@fontsource-variable/caveat'
 import './index.css'
 
 const rootElement = document.getElementById('root')

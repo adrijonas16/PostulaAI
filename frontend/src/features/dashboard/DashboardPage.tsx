@@ -4,7 +4,7 @@ import { useJourney, type JourneyStep } from '../../app/useJourney'
 import { formatDate } from '../../shared/lib/formatDate'
 import { primaryLinkClass, secondaryLinkClass } from '../../shared/ui/Button'
 import { LoadingState } from '../../shared/ui/LoadingState'
-import { PageHeader, Sheet } from '../../shared/ui/Sheet'
+import { Sheet } from '../../shared/ui/Sheet'
 import { useAuth } from '../auth/AuthContext'
 import { analysisKeys, getUsage, listAnalyses } from '../analyses/analysesApi'
 import { BandPill } from '../analyses/BandPill'
@@ -12,6 +12,17 @@ import { jobPostingKeys, listJobPostings } from '../jobs/jobsApi'
 import { getProfile, profileQueryKey } from '../profile/profileApi'
 
 const RECENT_COUNT = 5
+
+function greeting(now = new Date()): string {
+  const hour = now.getHours()
+  if (hour < 12) return 'Buenos días'
+  if (hour < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
+function firstName(displayName: string | undefined): string {
+  return displayName?.trim().split(/\s+/)[0] ?? ''
+}
 
 const nextStepCopy: Record<JourneyStep | 'done', { title: string; body: string; cta: string; to: string }> = {
   profile: {
@@ -57,7 +68,15 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <PageHeader title="Inicio" description={`Hola, ${user?.displayName ?? ''}. Prepara cada postulación en tres pasos.`} />
+      <header className="mb-8">
+        <h1 id="page-title" className="text-3xl font-bold md:text-4xl">
+          {greeting()}, {firstName(user?.displayName)}{' '}
+          <span className="wave" aria-hidden="true">
+            👋
+          </span>
+        </h1>
+        <p className="mt-2 text-graphite">Prepara cada postulación en tres pasos: tu perfil, la vacante y el análisis.</p>
+      </header>
 
       {journey.loading ? (
         <LoadingState label="Cargando tu progreso…" />
